@@ -33,7 +33,7 @@ hour or so...
 
 To build and install the driver using DKMS do:
 
-    sudo dkms install -m taudac -v 1.1.0
+    sudo dkms install -m taudac -v 1.1.0 --force
 
 ### Uninstalling the driver
 
