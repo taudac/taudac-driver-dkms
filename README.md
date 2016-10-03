@@ -15,12 +15,12 @@ We will build and install the driver using DKMS.
 
 If not already done, download and unzip the driver source directory with:
 
-    wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-1.0.0.zip
-    unzip taudac-1.0.0.zip
+    wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-1.1.0.zip
+    unzip taudac-1.1.0.zip
 
 Now copy the driver source to a directory where DKMS can find it:
 
-    sudo cp -r taudac-driver-dkms-taudac-1.0.0 /usr/src/taudac-1.0.0
+    sudo cp -r taudac-driver-dkms-taudac-1.1.0 /usr/src/taudac-1.1.0
 
 Install the build dependencies with:
 
@@ -33,13 +33,13 @@ hour or so...
 
 To build and install the driver using DKMS do:
 
-    sudo dkms install -m taudac -v 1.0.0
+    sudo dkms install -m taudac -v 1.1.0
 
 ### Uninstalling the driver
 
 The driver can be uninstalled using DKMS with:
 
-    sudo dkms remove -m taudac -v 1.0.0 --all
+    sudo dkms remove -m taudac -v 1.1.0 --all
 
 Configuration
 -------------
