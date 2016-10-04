@@ -6,9 +6,9 @@ targets += $(dtbo-y)
 always  := $(dtbo-y)
 
 all:
-	make -C /lib/modules/${kernelver}/build M=$(PWD)
+	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD)
 	../../dkms.post_build
 
 clean:
-	make -C /lib/modules/${kernelver}/build M=$(PWD) clean
+	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) clean
 

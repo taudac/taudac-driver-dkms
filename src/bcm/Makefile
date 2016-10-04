@@ -4,8 +4,8 @@ snd-soc-taudac-objs := taudac.o
 obj-m += snd-soc-taudac.o
 
 all:
-	make -C /lib/modules/${kernelver}/build M=$(PWD) modules
+	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) modules
 
 clean:
-	make -C /lib/modules/${kernelver}/build M=$(PWD) clean
+	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) clean
 
