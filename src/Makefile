@@ -1,6 +1,6 @@
 export kernelver ?= $(shell uname -r)
 
-DIRS = bcm codecs clk overlays
+DIRS = bcm codecs clk
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
 
