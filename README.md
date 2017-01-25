@@ -13,7 +13,7 @@ We will build and install the driver using DKMS.
 
 ### Preparation
 
-If not already done, download and unzip the driver source directory with:
+If not already done, download and unzip the driver source directory:
 
     wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-1.1.0.zip
     unzip taudac-1.1.0.zip
@@ -22,12 +22,18 @@ Now copy the driver source to a directory where DKMS can find it:
 
     sudo cp -r taudac-driver-dkms-taudac-1.1.0 /usr/src/taudac-1.1.0
 
-Install the build dependencies with:
+Install the build dependencies:
 
     sudo apt-get install dkms build-essential raspberrypi-kernel-headers
 
 Please be patient, _"Unpacking raspberrypi-kernel-headers"_ might take an
 hour or so...
+
+_NOTE: If your kernel is shipped without kernel-headers, installing the
+`raspberrypi-kernel-headers` package using apt-get will not install the
+required header files. In this case you should find precompiled headers here:
+`https://www.niksula.hut.fi/~mhiienka/Rpi/linux-headers-rpi/`.
+Simply download and install the deb-package appropriate for your kernel._
 
 ### Installing the driver
 
