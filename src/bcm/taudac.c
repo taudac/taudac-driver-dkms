@@ -240,13 +240,13 @@ static void taudac_shutdown(struct snd_pcm_substream *substream)
 	struct snd_soc_card_drvdata *drvdata =
 			snd_soc_card_get_drvdata(rtd->card);
 
-	/* disable codecs
-	 * having the codecs enabled while enabling the master clock
-	 * leads to random audible glitches
-	 */
 	for (i = 0; i < num_codecs; i++) {
+		/* disable codecs - avoid audible glitches */
 		snd_soc_update_bits(codec_dais[i]->codec, WM8741_FORMAT_CONTROL,
 				WM8741_PWDN_MASK, WM8741_PWDN);
+		/* clear codec sysclk - restore rate constrants */
+		snd_soc_dai_set_sysclk(codec_dais[i], WM8741_SYSCLK, 0,
+				SND_SOC_CLOCK_IN);
 	}
 
 	/* disable clocks */
