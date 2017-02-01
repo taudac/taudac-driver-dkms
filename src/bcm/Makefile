@@ -3,6 +3,11 @@ PWD := $(shell pwd)
 snd-soc-taudac-objs := taudac.o
 obj-m += snd-soc-taudac.o
 
+DEBUG ?= 0
+ifeq ($(DEBUG), 1)
+    CFLAGS_taudac.o := -DDEBUG
+endif
+
 all:
 	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) modules
 
