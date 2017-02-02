@@ -38,6 +38,7 @@ static int clk_gpio_gate_enable(struct clk_hw *hw)
 	struct clk_gpio *clk = to_clk_gpio(hw);
 
 	gpiod_set_value(clk->gpiod, 1);
+	pr_debug("%s clock enabled\n", clk_hw_get_name(hw));
 
 	return 0;
 }
@@ -47,6 +48,7 @@ static void clk_gpio_gate_disable(struct clk_hw *hw)
 	struct clk_gpio *clk = to_clk_gpio(hw);
 
 	gpiod_set_value(clk->gpiod, 0);
+	pr_debug("%s clock disabled\n", clk_hw_get_name(hw));
 }
 
 static int clk_gpio_gate_is_enabled(struct clk_hw *hw)
@@ -83,6 +85,7 @@ static int clk_gpio_mux_set_parent(struct clk_hw *hw, u8 index)
 	struct clk_gpio *clk = to_clk_gpio(hw);
 
 	gpiod_set_value(clk->gpiod, index);
+	pr_debug("%s set parent %d\n", clk_hw_get_name(hw), index);
 
 	return 0;
 }
