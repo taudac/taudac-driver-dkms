@@ -95,7 +95,7 @@ static void taudac_clk_unprepare(struct snd_soc_card_drvdata *drvdata)
 
 	for (i = 0; i < NUM_BCLKS; i++) {
 		if (drvdata->bclk_prepared[i]) {
-			clk_unprepare(drvdata->bclk[i]);
+			clk_disable_unprepare(drvdata->bclk[i]);
 			drvdata->bclk_prepared[i] = false;
 		}
 	}
@@ -107,7 +107,7 @@ static int taudac_clk_prepare(struct snd_soc_card_drvdata *drvdata)
 
 	for (i = 0; i < NUM_BCLKS; i++) {
 		if (!drvdata->bclk_prepared[i]) {
-			ret = clk_prepare(drvdata->bclk[i]);
+			ret = clk_prepare_enable(drvdata->bclk[i]);
 			if (ret != 0)
 				return ret;
 			drvdata->bclk_prepared[i] = true;
