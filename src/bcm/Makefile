@@ -14,3 +14,7 @@ all:
 clean:
 	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) clean
 
+.PHONY: install
+install:
+	install -m 644 \
+	snd-soc-taudac.ko /lib/modules/${kernelver}/kernel/sound/soc/bcm/

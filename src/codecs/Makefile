@@ -14,3 +14,7 @@ all:
 clean:
 	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) clean
 
+.PHONY: install
+install:
+	install -m 644 \
+	snd-soc-wm8741.ko /lib/modules/${kernelver}/kernel/sound/soc/codecs/
