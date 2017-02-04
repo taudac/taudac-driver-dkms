@@ -86,14 +86,6 @@ static int taudac_clk_init(struct snd_soc_card_drvdata *drvdata)
 			return ret;
 	}
 
-	ret = clk_prepare(drvdata->mux_mclk);
-	if (ret < 0)
-		return ret;
-
-	ret = clk_prepare(drvdata->gate_mclk);
-	if (ret < 0)
-		return ret;
-
 	return 0;
 }
 
@@ -128,7 +120,7 @@ static int taudac_clk_prepare(struct snd_soc_card_drvdata *drvdata)
 static void taudac_clk_disable(struct snd_soc_card_drvdata *drvdata)
 {
 	if (drvdata->mclk_enabled) {
-		clk_disable(drvdata->gate_mclk);
+		clk_disable_unprepare(drvdata->gate_mclk);
 		drvdata->mclk_enabled = false;
 	}
 }
@@ -151,7 +143,7 @@ static int taudac_clk_enable(struct snd_soc_card_drvdata *drvdata,
 	if (ret < 0)
 		return ret;
 
-	ret = clk_enable(drvdata->gate_mclk);
+	ret = clk_prepare_enable(drvdata->gate_mclk);
 	if (ret < 0)
 		return ret;
 
