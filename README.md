@@ -29,12 +29,6 @@ Install the build dependencies:
 Please be patient, _"Unpacking raspberrypi-kernel-headers"_ might take an
 hour or so...
 
-_NOTE: If your kernel is shipped without kernel-headers, installing the
-`raspberrypi-kernel-headers` package using apt-get will not install the
-required header files. In this case, you can find precompiled headers
-[here](https://www.niksula.hut.fi/~mhiienka/Rpi/linux-headers-rpi/).
-Simply download and install the deb-package appropriate for your kernel._
-
 ### Installing the driver
 
 To build and install the driver using DKMS do:
