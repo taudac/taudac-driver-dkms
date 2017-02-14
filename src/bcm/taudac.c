@@ -28,20 +28,29 @@
 #include <linux/clk.h>
 
 enum {
-	BCLK_DACR,
-	BCLK_DACL,
 	BCLK_CPU,
+	BCLK_DACL,
+	BCLK_DACR,
 	NUM_BCLKS
+};
+
+enum {
+	LRCLK_CPU,
+	LRCLK_DACL,
+	LRCLK_DACR,
+	NUM_LRCLKS
 };
 
 struct snd_soc_card_drvdata {
 	struct clk *mclk24;
 	struct clk *mclk22;
-	struct clk *mux_mclk;
-	struct clk *gate_mclk;
-	bool mclk_enabled;
+	struct clk *mclk_mux;
+	struct clk *mclk_gate;
 	struct clk *bclk[NUM_BCLKS];
+	struct clk *lrclk[NUM_LRCLKS];
+	bool mclk_enabled;
 	bool bclk_prepared[NUM_BCLKS];
+	bool lrclk_prepared[NUM_BCLKS];
 };
 
 static const struct reg_default wm8741_reg_updates[] = {
@@ -52,44 +61,42 @@ static const struct reg_default wm8741_reg_updates[] = {
 /*
  * clocks
  */
-static int taudac_clk_init(struct snd_soc_card_drvdata *drvdata)
+static int taudac_i2s_clk_init(struct clk *clk)
 {
-	int ret, i;
+	int ret;
 	struct clk *clkin, *pll, *ms;
 	unsigned long clkin_rate, pll_rate, ms_rate;
 	const int pll_clkin_ratio = 31;
 	const int clkin_ms_ratio = 8;
 
-	for (i = 0; i < NUM_BCLKS; i++) {
-		ms = clk_get_parent(drvdata->bclk[i]);
-		if (IS_ERR(ms))
-			return -EINVAL;
+	ms = clk_get_parent(clk);
+	if (IS_ERR(ms))
+		return -EINVAL;
 
-		pll = clk_get_parent(ms);
-		if (IS_ERR(pll))
-			return -EINVAL;
+	pll = clk_get_parent(ms);
+	if (IS_ERR(pll))
+		return -EINVAL;
 
-		clkin = clk_get_parent(pll);
-		if (IS_ERR(clkin))
-			return -EINVAL;
+	clkin = clk_get_parent(pll);
+	if (IS_ERR(clkin))
+		return -EINVAL;
 
-		clkin_rate = clk_get_rate(clkin);
-		pll_rate = clkin_rate * pll_clkin_ratio;
-		ms_rate = clkin_rate / clkin_ms_ratio;
+	clkin_rate = clk_get_rate(clkin);
+	pll_rate = clkin_rate * pll_clkin_ratio;
+	ms_rate = clkin_rate / clkin_ms_ratio;
 
-		ret = clk_set_rate(pll, pll_rate);
-		if (ret < 0)
-			return ret;
+	ret = clk_set_rate(pll, pll_rate);
+	if (ret < 0)
+		return ret;
 
-		ret = clk_set_rate(ms, ms_rate);
-		if (ret < 0)
-			return ret;
-	}
+	ret = clk_set_rate(ms, ms_rate);
+	if (ret < 0)
+		return ret;
 
 	return 0;
 }
 
-static void taudac_clk_unprepare(struct snd_soc_card_drvdata *drvdata)
+static void taudac_i2s_clk_disable(struct snd_soc_card_drvdata *drvdata)
 {
 	int i;
 
@@ -99,9 +106,16 @@ static void taudac_clk_unprepare(struct snd_soc_card_drvdata *drvdata)
 			drvdata->bclk_prepared[i] = false;
 		}
 	}
+
+	for (i = 0; i < NUM_LRCLKS; i++) {
+		if (drvdata->lrclk_prepared[i]) {
+			clk_disable_unprepare(drvdata->lrclk[i]);
+			drvdata->lrclk_prepared[i] = false;
+		}
+	}
 }
 
-static int taudac_clk_prepare(struct snd_soc_card_drvdata *drvdata)
+static int taudac_i2s_clk_enable(struct snd_soc_card_drvdata *drvdata)
 {
 	int ret, i;
 
@@ -114,28 +128,37 @@ static int taudac_clk_prepare(struct snd_soc_card_drvdata *drvdata)
 		}
 	}
 
+	for (i = 0; i < NUM_LRCLKS; i++) {
+		if (!drvdata->lrclk_prepared[i]) {
+			ret = clk_prepare_enable(drvdata->lrclk[i]);
+			if (ret != 0)
+				return ret;
+			drvdata->lrclk_prepared[i] = true;
+		}
+	}
+
 	return 0;
 }
 
-static void taudac_clk_disable(struct snd_soc_card_drvdata *drvdata)
+static void taudac_mclk_disable(struct snd_soc_card_drvdata *drvdata)
 {
 	if (drvdata->mclk_enabled) {
-		clk_disable_unprepare(drvdata->gate_mclk);
+		clk_disable_unprepare(drvdata->mclk_gate);
 		drvdata->mclk_enabled = false;
 	}
 }
 
-static int taudac_clk_enable(struct snd_soc_card_drvdata *drvdata,
-		unsigned long mclk_rate, unsigned long bclk_rate)
+static int taudac_mclk_enable(struct snd_soc_card_drvdata *drvdata,
+		unsigned long mclk_rate)
 {
-	int ret, i;
+	int ret;
 
 	switch (mclk_rate) {
 	case 22579200:
-		ret = clk_set_parent(drvdata->mux_mclk, drvdata->mclk22);
+		ret = clk_set_parent(drvdata->mclk_mux, drvdata->mclk22);
 		break;
 	case 24576000:
-		ret = clk_set_parent(drvdata->mux_mclk, drvdata->mclk24);
+		ret = clk_set_parent(drvdata->mclk_mux, drvdata->mclk24);
 		break;
 	default:
 		return -EINVAL;
@@ -143,15 +166,29 @@ static int taudac_clk_enable(struct snd_soc_card_drvdata *drvdata,
 	if (ret < 0)
 		return ret;
 
-	ret = clk_prepare_enable(drvdata->gate_mclk);
+	ret = clk_prepare_enable(drvdata->mclk_gate);
 	if (ret < 0)
 		return ret;
 
 	drvdata->mclk_enabled = true;
 	msleep(20);
 
+	return 0;
+}
+
+static int taudac_i2s_clk_set_rate(struct snd_soc_card_drvdata *drvdata,
+		unsigned long bclk_rate, unsigned long lrclk_rate)
+{
+	int ret, i;
+
 	for (i = 0; i < NUM_BCLKS; i++) {
 		ret = clk_set_rate(drvdata->bclk[i], bclk_rate);
+		if (ret < 0)
+			return ret;
+	}
+
+	for (i = 0; i < NUM_LRCLKS; i++) {
+		ret = clk_set_rate(drvdata->lrclk[i], lrclk_rate);
 		if (ret < 0)
 			return ret;
 	}
@@ -195,10 +232,24 @@ static int taudac_init(struct snd_soc_pcm_runtime *rtd)
 	struct snd_soc_card_drvdata *drvdata =
 			snd_soc_card_get_drvdata(rtd->card);
 
-	ret = taudac_clk_init(drvdata);
-	if (ret < 0) {
-		dev_err(rtd->card->dev, "Failed to initialize clocks\n");
-		return ret;
+	for (i = 0; i < NUM_BCLKS; i++) {
+		ret = taudac_i2s_clk_init(drvdata->bclk[i]);
+		if (ret < 0) {
+			dev_err(rtd->card->dev,
+					"Failed to initialize bit clocks: %d\n",
+					ret);
+			return ret;
+		}
+	}
+
+	for (i = 0; i < NUM_LRCLKS; i++) {
+		ret = taudac_i2s_clk_init(drvdata->lrclk[i]);
+		if (ret < 0) {
+			dev_err(rtd->card->dev,
+					"Failed to initialize frame clocks: %d\n",
+					ret);
+			return ret;
+		}
 	}
 
 	for (i = 0; i < num_codecs; i++) {
@@ -209,17 +260,14 @@ static int taudac_init(struct snd_soc_pcm_runtime *rtd)
 					wm8741_reg_updates[j].def);
 
 			if (ret < 0) {
-				dev_err(rtd->card->dev, "Failed to configure codecs\n");
+				dev_err(rtd->card->dev,
+						"Failed to configure codecs: %d\n",
+						ret);
 				return ret;
 			}
 		}
 	}
 
-	return 0;
-}
-
-static int taudac_startup(struct snd_pcm_substream *substream)
-{
 	return 0;
 }
 
@@ -242,8 +290,8 @@ static void taudac_shutdown(struct snd_pcm_substream *substream)
 	}
 
 	/* disable clocks */
-	taudac_clk_disable(drvdata);
-	taudac_clk_unprepare(drvdata);
+	taudac_i2s_clk_disable(drvdata);
+	taudac_mclk_disable(drvdata);
 }
 
 static int taudac_hw_params(struct snd_pcm_substream *substream,
@@ -257,11 +305,14 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_dai **codec_dais = rtd->codec_dais;
 	int num_codecs = rtd->num_codecs;
 
-	unsigned int fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_NB_NF;
 	unsigned int mclk_rate, bclk_rate;
 	unsigned int lrclk_rate = params_rate(params);
 	int width = params_width(params);
 	u16 osr;
+
+	unsigned int fmt = SND_SOC_DAIFMT_I2S |	SND_SOC_DAIFMT_NB_NF;
+	unsigned int cpu_fmt   = fmt | SND_SOC_DAIFMT_CBM_CFM;
+	unsigned int codec_fmt = fmt | SND_SOC_DAIFMT_CBS_CFS;
 
 	if (width == 24)
 		width = 25;
@@ -291,7 +342,7 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	if (ret < 0)
 		return ret;
 
-	ret = snd_soc_dai_set_fmt(cpu_dai, SND_SOC_DAIFMT_CBM_CFS | fmt);
+	ret = snd_soc_dai_set_fmt(cpu_dai, cpu_fmt);
 	if (ret < 0)
 		return ret;
 
@@ -311,8 +362,7 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 			return ret;
 
 		/* set codec DAI configuration */
-		ret = snd_soc_dai_set_fmt(codec_dais[i],
-				SND_SOC_DAIFMT_CBS_CFS | fmt);
+		ret = snd_soc_dai_set_fmt(codec_dais[i], codec_fmt);
 		if (ret < 0)
 			return ret;
 
@@ -325,25 +375,25 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	}
 
 	/* enable clocks */
-	ret = taudac_clk_enable(drvdata, mclk_rate, bclk_rate);
-	if (ret < 0) {
-		dev_err(rtd->card->dev, "Starting clocks failed: %d\n", ret);
+	ret = taudac_mclk_enable(drvdata, mclk_rate);
+	if (ret < 0)
 		return ret;
-	}
 
-	ret = taudac_clk_prepare(drvdata);
-	if (ret < 0) {
-		dev_err(rtd->card->dev, "Preparing clocks failed: %d\n", ret);
+	ret = taudac_i2s_clk_set_rate(drvdata, bclk_rate, lrclk_rate);
+	if (ret < 0)
 		return ret;
-	}
+
+	ret = taudac_i2s_clk_enable(drvdata);
+	if (ret < 0)
+		return ret;
 
 	/* enable codecs */
 	/* TODO: TBC: powering down the codes is probably not required if we
 	 * use the AVMID reference.
 	 */
 	for (i = 0; i < num_codecs; i++) {
-		snd_soc_update_bits(codec_dais[i]->codec, WM8741_FORMAT_CONTROL,
-				WM8741_PWDN_MASK, 0);
+		snd_soc_update_bits(codec_dais[i]->codec,
+				WM8741_FORMAT_CONTROL, WM8741_PWDN_MASK, 0);
 	}
 
 	dev_dbg(rtd->card->dev, "%s: mclk = %u, bclk = %u, lrclk = %u, width = %d, fmt = 0x%x",
@@ -353,9 +403,8 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 }
 
 static struct snd_soc_ops taudac_ops = {
-	.startup   = taudac_startup,
-	.shutdown  = taudac_shutdown,
 	.hw_params = taudac_hw_params,
+	.shutdown  = taudac_shutdown,
 };
 
 static struct snd_soc_dai_link taudac_dai[] = {
@@ -432,24 +481,36 @@ static int taudac_set_clk(struct device *dev,
 	if (IS_ERR(drvdata->mclk22))
 		return -EINVAL;
 
-	drvdata->mux_mclk = devm_clk_get(dev, "mux-mclk");
-	if (IS_ERR(drvdata->mux_mclk))
+	drvdata->mclk_mux = devm_clk_get(dev, "mux-mclk");
+	if (IS_ERR(drvdata->mclk_mux))
 		return -EINVAL;
 
-	drvdata->gate_mclk = devm_clk_get(dev, "gate-mclk");
-	if (IS_ERR(drvdata->gate_mclk))
+	drvdata->mclk_gate = devm_clk_get(dev, "gate-mclk");
+	if (IS_ERR(drvdata->mclk_gate))
 		return -EINVAL;
 
-	drvdata->bclk[BCLK_DACR] = devm_clk_get(dev, "bclk-dacr");
-	if (IS_ERR(drvdata->bclk[BCLK_DACR]))
+	drvdata->bclk[BCLK_CPU] = devm_clk_get(dev, "bclk-cpu");
+	if (IS_ERR(drvdata->bclk[BCLK_CPU]))
 		return -EPROBE_DEFER;
 
 	drvdata->bclk[BCLK_DACL] = devm_clk_get(dev, "bclk-dacl");
 	if (IS_ERR(drvdata->bclk[BCLK_DACL]))
 		return -EPROBE_DEFER;
 
-	drvdata->bclk[BCLK_CPU] = devm_clk_get(dev, "bclk-cpu");
+	drvdata->bclk[BCLK_DACR] = devm_clk_get(dev, "bclk-dacr");
+	if (IS_ERR(drvdata->bclk[BCLK_DACR]))
+		return -EPROBE_DEFER;
+
+	drvdata->bclk[LRCLK_CPU] = devm_clk_get(dev, "lrclk-cpu");
 	if (IS_ERR(drvdata->bclk[BCLK_CPU]))
+		return -EPROBE_DEFER;
+
+	drvdata->bclk[LRCLK_DACL] = devm_clk_get(dev, "lrclk-dacl");
+	if (IS_ERR(drvdata->bclk[LRCLK_DACL]))
+		return -EPROBE_DEFER;
+
+	drvdata->bclk[LRCLK_DACR] = devm_clk_get(dev, "lrclk-dacr");
+	if (IS_ERR(drvdata->bclk[LRCLK_DACR]))
 		return -EPROBE_DEFER;
 
 	return 0;
