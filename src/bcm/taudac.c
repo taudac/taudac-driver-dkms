@@ -27,6 +27,9 @@
 #include <linux/i2c.h>
 #include <linux/clk.h>
 
+/*
+ * clocks
+ */
 enum {
 	BCLK_CPU,
 	BCLK_DACL,
@@ -53,14 +56,6 @@ struct snd_soc_card_drvdata {
 	bool lrclk_prepared[NUM_BCLKS];
 };
 
-static const struct reg_default wm8741_reg_updates[] = {
-	{0x04, 0x0011},    /* R4 - Volume Control */
-	{0x05, 0x0080},    /* R5 - Format Control */
-};
-
-/*
- * clocks
- */
 static int taudac_i2s_clks_init(struct snd_soc_card_drvdata *drvdata)
 {
 	int ret, i, k, num_clks;
@@ -233,30 +228,23 @@ static struct snd_soc_codec_conf taudac_codec_conf[] = {
 	},
 };
 
-/*
- * asoc digital audio interface
- */
-static int taudac_init(struct snd_soc_pcm_runtime *rtd)
+static const struct reg_default wm8741_reg_updates[] = {
+	{0x04, 0x0011},    /* R4 - Volume Control */
+	{0x05, 0x0080},    /* R5 - Format Control */
+};
+
+static int taudac_codecs_init(struct snd_soc_pcm_runtime *rtd)
 {
-	int ret, i, j;
+	int ret, i, k;
 	int num_codecs = rtd->num_codecs;
 	struct snd_soc_dai **codec_dais = rtd->codec_dais;
-	struct snd_soc_card_drvdata *drvdata =
-			snd_soc_card_get_drvdata(rtd->card);
-
-	ret = taudac_i2s_clks_init(drvdata);
-	if (ret < 0) {
-		dev_err(rtd->card->dev,
-				"Failed to initialize bit clocks: %d\n", ret);
-		return ret;
-	}
 
 	for (i = 0; i < num_codecs; i++) {
 		/* change some codec settings */
-		for (j = 0; j < ARRAY_SIZE(wm8741_reg_updates); j++) {
+		for (k = 0; k < ARRAY_SIZE(wm8741_reg_updates); k++) {
 			ret = snd_soc_write(codec_dais[i]->codec,
-					wm8741_reg_updates[j].reg,
-					wm8741_reg_updates[j].def);
+					wm8741_reg_updates[k].reg,
+					wm8741_reg_updates[k].def);
 
 			if (ret < 0) {
 				dev_err(rtd->card->dev,
@@ -270,14 +258,11 @@ static int taudac_init(struct snd_soc_pcm_runtime *rtd)
 	return 0;
 }
 
-static void taudac_shutdown(struct snd_pcm_substream *substream)
+static void taudac_codecs_shutdown(struct snd_soc_pcm_runtime *rtd)
 {
 	int i;
-	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	int num_codecs = rtd->num_codecs;
 	struct snd_soc_dai **codec_dais = rtd->codec_dais;
-	struct snd_soc_card_drvdata *drvdata =
-			snd_soc_card_get_drvdata(rtd->card);
 
 	for (i = 0; i < num_codecs; i++) {
 		/* disable codecs - avoid audible glitches */
@@ -287,8 +272,87 @@ static void taudac_shutdown(struct snd_pcm_substream *substream)
 		snd_soc_dai_set_sysclk(codec_dais[i], WM8741_SYSCLK, 0,
 				SND_SOC_CLOCK_IN);
 	}
+}
 
-	/* disable clocks */
+static int taudac_codecs_prepare(struct snd_soc_pcm_runtime *rtd,
+		unsigned int mclk_rate, unsigned int fmt, unsigned int osr)
+{
+	int ret, i;
+	struct snd_soc_dai **codec_dais = rtd->codec_dais;
+	int num_codecs = rtd->num_codecs;
+
+	for (i = 0; i < num_codecs; i++) {
+		/* set codec sysclk */
+		ret = snd_soc_dai_set_sysclk(codec_dais[i],
+				WM8741_SYSCLK, mclk_rate, SND_SOC_CLOCK_IN);
+		if (ret < 0)
+			return ret;
+
+		/* set codec DAI configuration */
+		ret = snd_soc_dai_set_fmt(codec_dais[i], fmt);
+		if (ret < 0)
+			return ret;
+
+		/* set codec oversampling rate */
+		ret = snd_soc_update_bits(codec_dais[i]->codec,
+				WM8741_MODE_CONTROL_1,
+				WM8741_OSR_MASK, osr << WM8741_OSR_SHIFT);
+		if (ret < 0)
+			return ret;
+	}
+
+	return 0;
+}
+
+static int taudac_codecs_startup(struct snd_soc_pcm_runtime *rtd)
+{
+	int ret, i;
+	struct snd_soc_dai **codec_dais = rtd->codec_dais;
+	int num_codecs = rtd->num_codecs;
+
+	for (i = 0; i < num_codecs; i++) {
+		ret = snd_soc_update_bits(codec_dais[i]->codec,
+				WM8741_FORMAT_CONTROL, WM8741_PWDN_MASK, 0);
+		if (ret < 0)
+			return ret;
+	}
+
+	return 0;
+}
+
+/*
+ * asoc digital audio interface
+ */
+static int taudac_init(struct snd_soc_pcm_runtime *rtd)
+{
+	int ret;
+	struct snd_soc_card_drvdata *drvdata =
+			snd_soc_card_get_drvdata(rtd->card);
+
+	ret = taudac_i2s_clks_init(drvdata);
+	if (ret < 0) {
+		dev_err(rtd->card->dev,
+				"Failed to initialize bit clocks: %d\n", ret);
+		return ret;
+	}
+
+	ret = taudac_codecs_init(rtd);
+	if (ret < 0) {
+		dev_err(rtd->card->dev,
+				"Failed to configure codecs: %d\n", ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+static void taudac_shutdown(struct snd_pcm_substream *substream)
+{
+	struct snd_soc_pcm_runtime *rtd = substream->private_data;
+	struct snd_soc_card_drvdata *drvdata =
+			snd_soc_card_get_drvdata(rtd->card);
+
+	taudac_codecs_shutdown(rtd);
 	taudac_i2s_clks_disable(drvdata);
 	taudac_mclk_disable(drvdata);
 }
@@ -296,13 +360,11 @@ static void taudac_shutdown(struct snd_pcm_substream *substream)
 static int taudac_hw_params(struct snd_pcm_substream *substream,
 		struct snd_pcm_hw_params *params)
 {
-	int ret, i;
+	int ret;
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_card_drvdata *drvdata =
 			snd_soc_card_get_drvdata(rtd->card);
 	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
-	struct snd_soc_dai **codec_dais = rtd->codec_dais;
-	int num_codecs = rtd->num_codecs;
 
 	unsigned int mclk_rate, bclk_rate;
 	unsigned int lrclk_rate = params_rate(params);
@@ -353,25 +415,10 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	else
 		osr = 2;
 
-	for (i = 0; i < num_codecs; i++) {
-		/* set codec sysclk */
-		ret = snd_soc_dai_set_sysclk(codec_dais[i],
-				WM8741_SYSCLK, mclk_rate, SND_SOC_CLOCK_IN);
-		if (ret < 0)
-			return ret;
-
-		/* set codec DAI configuration */
-		ret = snd_soc_dai_set_fmt(codec_dais[i], codec_fmt);
-		if (ret < 0)
-			return ret;
-
-		/* set codec oversampling rate */
-		ret = snd_soc_update_bits(codec_dais[i]->codec,
-				WM8741_MODE_CONTROL_1,
-				WM8741_OSR_MASK, osr << WM8741_OSR_SHIFT);
-		if (ret < 0)
-			return ret;
-	}
+	/* prepare codecs */
+	ret = taudac_codecs_prepare(rtd, mclk_rate, codec_fmt, osr);
+	if (ret < 0)
+		return ret;
 
 	/* enable clocks */
 	ret = taudac_mclk_enable(drvdata, mclk_rate);
@@ -386,14 +433,10 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	if (ret < 0)
 		return ret;
 
-	/* enable codecs */
-	/* TODO: TBC: powering down the codes is probably not required if we
-	 * use the AVMID reference.
-	 */
-	for (i = 0; i < num_codecs; i++) {
-		snd_soc_update_bits(codec_dais[i]->codec,
-				WM8741_FORMAT_CONTROL, WM8741_PWDN_MASK, 0);
-	}
+	/* startup codecs */
+	ret = taudac_codecs_startup(rtd);
+	if (ret < 0)
+		return ret;
 
 	dev_dbg(rtd->card->dev, "%s: mclk = %u, bclk = %u, lrclk = %u, width = %d, fmt = 0x%x",
 			__func__, mclk_rate, bclk_rate, lrclk_rate, width, fmt);
