@@ -96,7 +96,7 @@ static int taudac_i2s_clk_init(struct clk *clk)
 	return 0;
 }
 
-static void taudac_i2s_clk_disable(struct snd_soc_card_drvdata *drvdata)
+static void taudac_i2s_clks_disable(struct snd_soc_card_drvdata *drvdata)
 {
 	int i;
 
@@ -115,7 +115,7 @@ static void taudac_i2s_clk_disable(struct snd_soc_card_drvdata *drvdata)
 	}
 }
 
-static int taudac_i2s_clk_enable(struct snd_soc_card_drvdata *drvdata)
+static int taudac_i2s_clks_enable(struct snd_soc_card_drvdata *drvdata)
 {
 	int ret, i;
 
@@ -176,7 +176,7 @@ static int taudac_mclk_enable(struct snd_soc_card_drvdata *drvdata,
 	return 0;
 }
 
-static int taudac_i2s_clk_set_rate(struct snd_soc_card_drvdata *drvdata,
+static int taudac_i2s_clks_set_rate(struct snd_soc_card_drvdata *drvdata,
 		unsigned long bclk_rate, unsigned long lrclk_rate)
 {
 	int ret, i;
@@ -290,7 +290,7 @@ static void taudac_shutdown(struct snd_pcm_substream *substream)
 	}
 
 	/* disable clocks */
-	taudac_i2s_clk_disable(drvdata);
+	taudac_i2s_clks_disable(drvdata);
 	taudac_mclk_disable(drvdata);
 }
 
@@ -379,11 +379,11 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	if (ret < 0)
 		return ret;
 
-	ret = taudac_i2s_clk_set_rate(drvdata, bclk_rate, lrclk_rate);
+	ret = taudac_i2s_clks_set_rate(drvdata, bclk_rate, lrclk_rate);
 	if (ret < 0)
 		return ret;
 
-	ret = taudac_i2s_clk_enable(drvdata);
+	ret = taudac_i2s_clks_enable(drvdata);
 	if (ret < 0)
 		return ret;
 
