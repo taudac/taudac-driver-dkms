@@ -61,37 +61,49 @@ static const struct reg_default wm8741_reg_updates[] = {
 /*
  * clocks
  */
-static int taudac_i2s_clk_init(struct clk *clk)
+static int taudac_i2s_clks_init(struct snd_soc_card_drvdata *drvdata)
 {
-	int ret;
+	int ret, i, k, num_clks;
 	struct clk *clkin, *pll, *ms;
 	unsigned long clkin_rate, pll_rate, ms_rate;
 	const int pll_clkin_ratio = 31;
 	const int clkin_ms_ratio = 8;
+	struct clk **clks;
 
-	ms = clk_get_parent(clk);
-	if (IS_ERR(ms))
-		return -EINVAL;
+	for (i = 0; i < 2; i++) {
+		if (i == 0) {
+			num_clks = NUM_BCLKS;
+			clks = drvdata->bclk;
+		} else {
+			num_clks = NUM_LRCLKS;
+			clks = drvdata->lrclk;
+		}
+		for (k = 0; k < num_clks; k++) {
+			ms = clk_get_parent(clks[k]);
+			if (IS_ERR(ms))
+				return -EINVAL;
 
-	pll = clk_get_parent(ms);
-	if (IS_ERR(pll))
-		return -EINVAL;
+			pll = clk_get_parent(ms);
+			if (IS_ERR(pll))
+				return -EINVAL;
 
-	clkin = clk_get_parent(pll);
-	if (IS_ERR(clkin))
-		return -EINVAL;
+			clkin = clk_get_parent(pll);
+			if (IS_ERR(clkin))
+				return -EINVAL;
 
-	clkin_rate = clk_get_rate(clkin);
-	pll_rate = clkin_rate * pll_clkin_ratio;
-	ms_rate = clkin_rate / clkin_ms_ratio;
+			clkin_rate = clk_get_rate(clkin);
+			pll_rate = clkin_rate * pll_clkin_ratio;
+			ms_rate = clkin_rate / clkin_ms_ratio;
 
-	ret = clk_set_rate(pll, pll_rate);
-	if (ret < 0)
-		return ret;
+			ret = clk_set_rate(pll, pll_rate);
+			if (ret < 0)
+				return ret;
 
-	ret = clk_set_rate(ms, ms_rate);
-	if (ret < 0)
-		return ret;
+			ret = clk_set_rate(ms, ms_rate);
+			if (ret < 0)
+				return ret;
+		}
+	}
 
 	return 0;
 }
@@ -232,24 +244,11 @@ static int taudac_init(struct snd_soc_pcm_runtime *rtd)
 	struct snd_soc_card_drvdata *drvdata =
 			snd_soc_card_get_drvdata(rtd->card);
 
-	for (i = 0; i < NUM_BCLKS; i++) {
-		ret = taudac_i2s_clk_init(drvdata->bclk[i]);
-		if (ret < 0) {
-			dev_err(rtd->card->dev,
-					"Failed to initialize bit clocks: %d\n",
-					ret);
-			return ret;
-		}
-	}
-
-	for (i = 0; i < NUM_LRCLKS; i++) {
-		ret = taudac_i2s_clk_init(drvdata->lrclk[i]);
-		if (ret < 0) {
-			dev_err(rtd->card->dev,
-					"Failed to initialize frame clocks: %d\n",
-					ret);
-			return ret;
-		}
+	ret = taudac_i2s_clks_init(drvdata);
+	if (ret < 0) {
+		dev_err(rtd->card->dev,
+				"Failed to initialize bit clocks: %d\n", ret);
+		return ret;
 	}
 
 	for (i = 0; i < num_codecs; i++) {
