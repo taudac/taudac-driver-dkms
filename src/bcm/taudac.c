@@ -543,16 +543,16 @@ static int taudac_set_clk(struct device *dev,
 	if (IS_ERR(drvdata->bclk[BCLK_DACR]))
 		return -EPROBE_DEFER;
 
-	drvdata->bclk[LRCLK_CPU] = devm_clk_get(dev, "lrclk-cpu");
-	if (IS_ERR(drvdata->bclk[BCLK_CPU]))
+	drvdata->lrclk[LRCLK_CPU] = devm_clk_get(dev, "lrclk-cpu");
+	if (IS_ERR(drvdata->lrclk[LRCLK_CPU]))
 		return -EPROBE_DEFER;
 
-	drvdata->bclk[LRCLK_DACL] = devm_clk_get(dev, "lrclk-dacl");
-	if (IS_ERR(drvdata->bclk[LRCLK_DACL]))
+	drvdata->lrclk[LRCLK_DACL] = devm_clk_get(dev, "lrclk-dacl");
+	if (IS_ERR(drvdata->lrclk[LRCLK_DACL]))
 		return -EPROBE_DEFER;
 
-	drvdata->bclk[LRCLK_DACR] = devm_clk_get(dev, "lrclk-dacr");
-	if (IS_ERR(drvdata->bclk[LRCLK_DACR]))
+	drvdata->lrclk[LRCLK_DACR] = devm_clk_get(dev, "lrclk-dacr");
+	if (IS_ERR(drvdata->lrclk[LRCLK_DACR]))
 		return -EPROBE_DEFER;
 
 	return 0;
