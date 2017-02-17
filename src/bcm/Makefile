@@ -1,5 +1,7 @@
 PWD := $(shell pwd)
 
+INSTALLDIR = /lib/modules/${kernelver}/kernel/sound/soc/bcm
+
 snd-soc-taudac-objs := taudac.o
 obj-m += snd-soc-taudac.o
 
@@ -14,7 +16,10 @@ all:
 clean:
 	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) clean
 
-.PHONY: install
+.PHONY: install uninstall
 install:
-	install -m 644 \
-	snd-soc-taudac.ko /lib/modules/${kernelver}/kernel/sound/soc/bcm/
+	install -m 644 snd-soc-taudac.ko $(INSTALLDIR)/
+
+uninstall:
+	rm $(INSTALLDIR)/snd-soc-taudac.ko
+

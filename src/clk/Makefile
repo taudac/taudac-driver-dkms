@@ -1,5 +1,7 @@
 PWD := $(shell pwd)
 
+INSTALLDIR = /lib/modules/${kernelver}/kernel/drivers/clk
+
 obj-m += clk-si5351.o
 
 DEBUG ?= 0
@@ -13,7 +15,10 @@ all:
 clean:
 	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) clean
 
-.PHONY: install
+.PHONY: install uninstall
 install:
-	install -m 644 \
-	clk-si5351.ko /lib/modules/${kernelver}/kernel/drivers/clk/
+	install -m 644 clk-si5351.ko $(INSTALLDIR)/
+
+uninstall:
+	rm $(INSTALLDIR)/clk-si5351.ko
+

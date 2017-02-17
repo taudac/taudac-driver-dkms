@@ -1,5 +1,7 @@
 PWD := $(shell pwd)
 
+INSTALLDIR = /lib/modules/${kernelver}/kernel/sound/soc/codecs
+
 snd-soc-wm8741-objs := wm8741.o
 obj-m += snd-soc-wm8741.o
 
@@ -14,7 +16,10 @@ all:
 clean:
 	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) clean
 
-.PHONY: install
+.PHONY: install uninstall
 install:
-	install -m 644 \
-	snd-soc-wm8741.ko /lib/modules/${kernelver}/kernel/sound/soc/codecs/
+	install -m 644 snd-soc-wm8741.ko $(INSTALLDIR)/
+
+uninstall:
+	rm $(INSTALLDIR)/snd-soc-wm8741.ko
+
