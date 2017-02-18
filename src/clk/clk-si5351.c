@@ -905,6 +905,15 @@ static int si5351_clkout_prepare(struct clk_hw *hw)
 
 	si5351_set_bits(hwdata->drvdata, SI5351_CLK0_CTRL + hwdata->num,
 			SI5351_CLK_POWERDOWN, 0);
+
+	/*
+	 * Reset the PLLs before enabling the outputs to get a deterministic
+	 * phase relationship between the output clocks. Otherwise, the phase
+	 * offset beween the clocks is unpredictable.
+	 */
+	si5351_reg_write(hwdata->drvdata, SI5351_PLL_RESET,
+			 SI5351_PLL_RESET_A | SI5351_PLL_RESET_B);
+
 	si5351_set_bits(hwdata->drvdata, SI5351_OUTPUT_ENABLE_CTRL,
 			(1 << hwdata->num), 0);
 	return 0;
