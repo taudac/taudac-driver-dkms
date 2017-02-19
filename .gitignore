@@ -5,3 +5,5 @@
 *.cmd
 *.order
 **/.tmp_versions/
+*.patch
+
