@@ -229,8 +229,16 @@ static struct snd_soc_codec_conf taudac_codec_conf[] = {
 };
 
 static const struct reg_default wm8741_reg_updates[] = {
-	{0x04, 0x0011},    /* R4 - Volume Control */
-	{0x05, 0x0080},    /* R5 - Format Control */
+	/**
+	 *  R4 - Volume Control: Enable Zero Detect and Volume Ramp
+	 */
+	{0x04, 0x0011},
+	/**
+	 * R5 - Format Control: Power Down Mode, Normal Phase
+	 * NOTE: In differential mono mode, the analogue output phase must
+	 * remain set as 'Normal'.
+	 */
+	{0x05, 0x0080},
 };
 
 static int taudac_codecs_init(struct snd_soc_pcm_runtime *rtd)
