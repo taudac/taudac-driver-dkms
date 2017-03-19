@@ -231,9 +231,9 @@ static struct snd_soc_codec_conf taudac_codec_conf[] = {
 static const struct reg_default wm8741_reg_updates[] = {
 	/**
 	 * R4 - Volume Control:
-	 *   enable Zero Detect and Volume Ramp, disable Zero Flag output
+	 *   enable Zero Detect, Mute and Volume Ramp, disable Zero Flag output
 	 */
-	{0x04, 0x0071},
+	{0x04, 0x0079},
 	/**
 	 * R5 - Format Control:
 	 *   go to Power Down Mode, configure Normal Phase
