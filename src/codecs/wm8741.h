@@ -172,6 +172,19 @@
 #define WM8741_MODESEL_SHIFT                         0  /* MODESEL - [1:0] */
 #define WM8741_MODESEL_WIDTH                         2  /* MODESEL - [1:0] */
 
+/* OSR field values */
+#define WM8741_OSR_LOW                               0 /* low: 32/44.1/48kHz */
+#define WM8741_OSR_MEDIUM                            1 /* medium: 88.2/96kHz */
+#define WM8741_OSR_HIGH                              2 /* high: 176.4/192kHz */
+
+/* SR field values */
+#define WM8741_SR_128                                1 /* 128fs */
+#define WM8741_SR_192                                2 /* 192fs */
+#define WM8741_SR_256                                3 /* 256fs */
+#define WM8741_SR_384                                4 /* 384fs */
+#define WM8741_SR_512                                5 /* 512fs */
+#define WM8741_SR_768                                6 /* 768fs */
+
 /*
  * R8 (0x08) - MODE_CONTROL_2
  */

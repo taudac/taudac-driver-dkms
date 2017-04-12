@@ -259,7 +259,7 @@ static int wm8741_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_codec *codec = dai->codec;
 	struct wm8741_priv *wm8741 = snd_soc_codec_get_drvdata(codec);
 	u16 iface = snd_soc_read(codec, WM8741_FORMAT_CONTROL) & 0x1FC;
-	u16 mode = snd_soc_read(codec, WM8741_MODE_CONTROL_1) & 0x1E3;
+	u16 mode = snd_soc_read(codec, WM8741_MODE_CONTROL_1) & 0x183;
 
 	/* The set of sample rates that can be supported depends on the
 	 * MCLK supplied to the CODEC - enforce this.
@@ -273,28 +273,36 @@ static int wm8741_hw_params(struct snd_pcm_substream *substream,
 	/* MCLK to LRCLK sampling rate ratio */
 	switch (wm8741->sysclk / params_rate(params)) {
 	case 128:
-		mode |= (1 << WM8741_SR_SHIFT);
+		mode |= (WM8741_SR_128 << WM8741_SR_SHIFT);
 		break;
 	case 192:
-		mode |= (2 << WM8741_SR_SHIFT);
+		mode |= (WM8741_SR_192 << WM8741_SR_SHIFT);
 		break;
 	case 256:
-		mode |= (3 << WM8741_SR_SHIFT);
+		mode |= (WM8741_SR_256 << WM8741_SR_SHIFT);
 		break;
 	case 384:
-		mode |= (4 << WM8741_SR_SHIFT);
+		mode |= (WM8741_SR_384 << WM8741_SR_SHIFT);
 		break;
 	case 512:
-		mode |= (5 << WM8741_SR_SHIFT);
+		mode |= (WM8741_SR_512 << WM8741_SR_SHIFT);
 		break;
 	case 768:
-		mode |= (6 << WM8741_SR_SHIFT);
+		mode |= (WM8741_SR_768 << WM8741_SR_SHIFT);
 		break;
 	default:
 		dev_err(codec->dev, "LRCLK %d unsupported with MCLK %d\n",
 			params_rate(params), wm8741->sysclk);
 		return -EINVAL;
 	}
+
+	/* oversampling rate */
+	if (params_rate(params) <= 48000)
+		mode |= (WM8741_OSR_LOW << WM8741_OSR_SHIFT);
+	else if (params_rate(params) <= 96000)
+		mode |= (WM8741_OSR_MEDIUM << WM8741_OSR_SHIFT);
+	else
+		mode |= (WM8741_OSR_HIGH << WM8741_OSR_SHIFT);
 
 	/* bit size */
 	switch (params_width(params)) {
