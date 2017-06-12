@@ -1,5 +1,5 @@
 export kernelver ?= $(shell uname -r)
-export KERNELDIR ?= /lib/modules/${kernelver}/build
+export KERNELDIR ?= /lib/modules/${kernelver}
 
 DIRS = bcm codecs clk
 BUILDDIRS = $(DIRS:%=build-%)

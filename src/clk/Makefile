@@ -1,6 +1,6 @@
 PWD := $(shell pwd)
 
-INSTALLDIR = /lib/modules/${kernelver}/kernel/drivers/clk
+INSTALLDIR = taudac
 
 obj-m += clk-si5351.o
 
@@ -10,15 +10,18 @@ ifeq ($(DEBUG), 1)
 endif
 
 all:
-	$(MAKE) -C $(KERNELDIR)  M=$(PWD) modules
+	$(MAKE) -C $(KERNELDIR)/build  M=$(PWD) modules
+
+install: all
+	$(MAKE) INSTALL_MOD_DIR=$(INSTALLDIR) \
+		-C $(KERNELDIR)/build M=$(PWD) modules_install
+		@depmod -a $(kernelver)
 
 clean:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
+	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) clean
 
-.PHONY: install uninstall
-install:
-	install -m 644 clk-si5351.ko $(INSTALLDIR)/
-
+.PHONY: uninstall
 uninstall:
-	rm $(INSTALLDIR)/clk-si5351.ko
+	@rm -f $(KERNELDIR)/$(INSTALLDIR)/clk-si5351.ko
+	@depmod -a $(kernelver)
 

@@ -1,6 +1,6 @@
 PWD := $(shell pwd)
 
-INSTALLDIR = /lib/modules/${kernelver}/kernel/sound/soc/codecs
+INSTALLDIR = taudac
 
 snd-soc-wm8741-objs := wm8741.o
 obj-m += snd-soc-wm8741.o
@@ -11,15 +11,18 @@ ifeq ($(DEBUG), 1)
 endif
 
 all:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
+	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) modules
+
+install: all
+	$(MAKE) INSTALL_MOD_DIR=$(INSTALLDIR) \
+		-C $(KERNELDIR)/build M=$(PWD) modules_install
+		@depmod -a $(kernelver)
 
 clean:
-	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
+	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) clean
 
-.PHONY: install uninstall
-install:
-	install -m 644 snd-soc-wm8741.ko $(INSTALLDIR)/
-
+.PHONY: uninstall
 uninstall:
-	rm $(INSTALLDIR)/snd-soc-wm8741.ko
+	@rm -f $(KERNELDIR)/$(INSTALLDIR)/snd-soc-wm8741.ko
+	@depmod -a $(kernelver)
 
