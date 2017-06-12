@@ -11,10 +11,10 @@ ifeq ($(DEBUG), 1)
 endif
 
 all:
-	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) modules
+	$(MAKE) -C $(KERNELDIR) M=$(PWD) modules
 
 clean:
-	$(MAKE) -C /lib/modules/${kernelver}/build M=$(PWD) clean
+	$(MAKE) -C $(KERNELDIR) M=$(PWD) clean
 
 .PHONY: install uninstall
 install:
