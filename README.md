@@ -56,5 +56,4 @@ References
 
 - [TauDAC homepage](http://www.taudac.com)
 - [TauDAC git-repository](https://github.com/taudac/taudac-driver-dkms)
-- [DKMS Manpage](http://linux.dell.com/dkms/manpage.html)
 
