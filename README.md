@@ -24,10 +24,23 @@ Now copy the driver source to a directory where DKMS can find it:
 
 Install the build dependencies:
 
-    sudo apt-get install dkms build-essential raspberrypi-kernel-headers
+    sudo apt-get install dkms build-essential
+
+### Installing the Kernel Headers
+
+To build the driver, we will need to install the kernel headers. The way to do
+it depends on the distribution you are using.
+
+The **Raspbian** way:
+
+    sudo apt-get install raspberrypi-kernel-headers
 
 Please be patient, _"Unpacking raspberrypi-kernel-headers"_ might take an
 hour or so...
+
+The **Volumio** way:
+
+    sudo volumio kernelsource
 
 ### Installing the driver
 
@@ -56,4 +69,3 @@ References
 
 - [TauDAC homepage](http://www.taudac.com)
 - [TauDAC git-repository](https://github.com/taudac/taudac-driver-dkms)
-
