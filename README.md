@@ -4,7 +4,7 @@ TauDAC ASoC Driver
 The TauDAC driver is distributed **WITHOUT ANY WARRANTY** of any kind.
 Use it at your own risk!
 
-Copyright (C) 2016 Sergej Sawazki
+Copyright (C) 2017 Sergej Sawazki
 
 Installation
 ------------
@@ -15,12 +15,12 @@ We will build and install the driver using DKMS.
 
 If not already done, download and unzip the driver source directory:
 
-    wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-1.1.2.zip
-    unzip taudac-1.1.2.zip
+    wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-2.0.0.zip
+    unzip taudac-2.0.0.zip
 
 Now copy the driver source to a directory where DKMS can find it:
 
-    sudo cp -r taudac-driver-dkms-taudac-1.1.2 /usr/src/taudac-1.1.2
+    sudo cp -r taudac-driver-dkms-taudac-2.0.0 /usr/src/taudac-2.0.0
 
 Install the build dependencies:
 
@@ -46,13 +46,13 @@ The **Volumio** way:
 
 To build and install the driver using DKMS do:
 
-    sudo dkms install -m taudac -v 1.1.2 --force
+    sudo dkms install -m taudac -v 2.0.0 --force
 
 ### Uninstalling the driver
 
 The driver can be uninstalled using DKMS with:
 
-    sudo dkms remove -m taudac -v 1.1.2 --all
+    sudo dkms remove -m taudac -v 2.0.0 --all
 
 Configuration
 -------------
