@@ -15,8 +15,8 @@ We will build and install the driver using DKMS.
 
 If not already done, download and unzip the driver source directory:
 
-    wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-2.0.0.zip
-    unzip taudac-2.0.0.zip
+    wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-2.0.0.tar.gz
+    tar -xzf taudac-2.0.0.tar.gz
 
 Now copy the driver source to a directory where DKMS can find it:
 
