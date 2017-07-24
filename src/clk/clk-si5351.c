@@ -1449,9 +1449,9 @@ static int si5351_i2c_probe(struct i2c_client *client,
 	}
 
 	if (!IS_ERR(drvdata->pxtal))
-		clk_prepare(drvdata->pxtal);
+		clk_prepare_enable(drvdata->pxtal);
 	if (!IS_ERR(drvdata->pclkin))
-		clk_prepare(drvdata->pclkin);
+		clk_prepare_enable(drvdata->pclkin);
 
 	/* register xtal input clock gate */
 	memset(&init, 0, sizeof(init));
@@ -1624,9 +1624,9 @@ static int si5351_i2c_probe(struct i2c_client *client,
 
 err_clk:
 	if (!IS_ERR(drvdata->pxtal))
-		clk_unprepare(drvdata->pxtal);
+		clk_disable_unprepare(drvdata->pxtal);
 	if (!IS_ERR(drvdata->pclkin))
-		clk_unprepare(drvdata->pclkin);
+		clk_disable_unprepare(drvdata->pclkin);
 	return ret;
 }
 
