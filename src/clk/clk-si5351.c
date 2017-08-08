@@ -898,6 +898,21 @@ static int _si5351_clkout_set_disable_state(
 	return 0;
 }
 
+void _si5351_clkout_reset_pll(struct si5351_driver_data *drvdata, int num)
+{
+	u8 val = si5351_reg_read(drvdata, SI5351_CLK0_CTRL + num);
+
+	switch (val & SI5351_CLK_INPUT_MASK) {
+	case SI5351_CLK_INPUT_XTAL:
+	case SI5351_CLK_INPUT_CLKIN:
+		return;  /* PLL not used, no need to reset */
+	}
+
+	si5351_reg_write(drvdata, SI5351_PLL_RESET,
+			 (val & SI5351_CLK_PLL_SELECT) ? SI5351_PLL_RESET_B :
+			 SI5351_PLL_RESET_A);
+}
+
 static int si5351_clkout_prepare(struct clk_hw *hw)
 {
 	struct si5351_hw_data *hwdata =
@@ -911,8 +926,7 @@ static int si5351_clkout_prepare(struct clk_hw *hw)
 	 * phase relationship between the output clocks. Otherwise, the phase
 	 * offset beween the clocks is unpredictable.
 	 */
-	si5351_reg_write(hwdata->drvdata, SI5351_PLL_RESET,
-			 SI5351_PLL_RESET_A | SI5351_PLL_RESET_B);
+	_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
 
 	si5351_set_bits(hwdata->drvdata, SI5351_OUTPUT_ENABLE_CTRL,
 			(1 << hwdata->num), 0);
@@ -1104,8 +1118,7 @@ static int si5351_clkout_set_rate(struct clk_hw *hw, unsigned long rate,
 	 * Do a pll soft reset on both plls, needed in some cases to get
 	 * all outputs running.
 	 */
-	si5351_reg_write(hwdata->drvdata, SI5351_PLL_RESET,
-			 SI5351_PLL_RESET_A | SI5351_PLL_RESET_B);
+	_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
 
 	dev_dbg(&hwdata->drvdata->client->dev,
 		"%s - %s: rdiv = %u, parent_rate = %lu, rate = %lu\n",
