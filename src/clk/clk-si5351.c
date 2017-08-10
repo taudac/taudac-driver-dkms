@@ -900,7 +900,13 @@ static int _si5351_clkout_set_disable_state(
 
 void _si5351_clkout_reset_pll(struct si5351_driver_data *drvdata, int num)
 {
-	u8 val = si5351_reg_read(drvdata, SI5351_CLK0_CTRL + num);
+	struct si5351_platform_data *pdata = drvdata->client->dev.platform_data;
+	u8 val;
+
+	if (!pdata->clkout[num].pll_reset)
+		return;  /* Resetting PLL disabled */
+
+	val = si5351_reg_read(drvdata, SI5351_CLK0_CTRL + num);
 
 	switch (val & SI5351_CLK_INPUT_MASK) {
 	case SI5351_CLK_INPUT_XTAL:
@@ -1321,6 +1327,9 @@ static int si5351_dt_parse(struct i2c_client *client,
 
 		pdata->clkout[num].pll_master =
 			of_property_read_bool(child, "silabs,pll-master");
+
+		pdata->clkout[num].pll_reset =
+			of_property_read_bool(child, "silabs,pll-reset");
 	}
 	client->dev.platform_data = pdata;
 
