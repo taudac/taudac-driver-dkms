@@ -1,6 +1,8 @@
 PWD := $(shell pwd)
 
+ORIGDIR = sound/soc/bcm
 INSTALLDIR = taudac
+MODULENAME = snd-soc-taudac.ko
 
 snd-soc-taudac-objs := taudac.o
 obj-m += snd-soc-taudac.o
@@ -18,11 +20,15 @@ install: all
 		-C $(KERNELDIR)/build M=$(PWD) modules_install
 		@depmod -a $(kernelver)
 
+dump: all
+	@install -m 644 -D -t ../$(DUMPDIR)/$(KERNELDIR)/kernel/$(ORIGDIR) \
+		$(MODULENAME)
+
 clean:
 	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) clean
 
 .PHONY: uninstall
 uninstall:
-	@rm -f $(KERNELDIR)/$(INSTALLDIR)/snd-soc-taudac.ko
+	@rm -f $(KERNELDIR)/$(INSTALLDIR)/$(MODULENAME)
 	@depmod -a $(kernelver)
 
