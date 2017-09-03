@@ -259,6 +259,7 @@ static int wm8741_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_codec *codec = dai->codec;
 	struct wm8741_priv *wm8741 = snd_soc_codec_get_drvdata(codec);
 	u16 iface = snd_soc_read(codec, WM8741_FORMAT_CONTROL) & 0x1FC;
+	u16 mode = snd_soc_read(codec, WM8741_MODE_CONTROL_1) & 0x183;
 	int i;
 
 	/* The set of sample rates that can be supported depends on the
@@ -281,6 +282,12 @@ static int wm8741_hw_params(struct snd_pcm_substream *substream,
 			params_rate(params), wm8741->sysclk);
 		return -EINVAL;
 	}
+
+	/* oversampling rate */
+	if (params_rate(params) > 96000)
+		mode |= 0x0040;
+	else if (params_rate(params) > 48000)
+		mode |= 0x0020;
 
 	/* bit size */
 	switch (params_width(params)) {
@@ -305,6 +312,7 @@ static int wm8741_hw_params(struct snd_pcm_substream *substream,
 		params_width(params), params_rate(params));
 
 	snd_soc_write(codec, WM8741_FORMAT_CONTROL, iface);
+	snd_soc_write(codec, WM8741_MODE_CONTROL_1, mode);
 	return 0;
 }
 
