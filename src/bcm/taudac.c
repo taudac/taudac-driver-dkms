@@ -330,8 +330,10 @@ static int codec_get_enum(struct snd_kcontrol *kcontrol,
 		struct snd_ctl_elem_value *ucontrol)
 {
 	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
-	struct snd_soc_dai **codec_dais = card->rtd->codec_dais;
-	int num_codecs = card->rtd->num_codecs;
+	struct snd_soc_pcm_runtime *rtd = list_first_entry(
+			&card->rtd_list, struct snd_soc_pcm_runtime, list);
+	struct snd_soc_dai **codec_dais = rtd->codec_dais;
+	int num_codecs = rtd->num_codecs;
 
 	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
 	unsigned int reg_val[2], val[2], item;
@@ -359,8 +361,10 @@ static int codec_put_enum(struct snd_kcontrol *kcontrol,
 		struct snd_ctl_elem_value *ucontrol)
 {
 	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
-	struct snd_soc_dai **codec_dais = card->rtd->codec_dais;
-	int num_codecs = card->rtd->num_codecs;
+	struct snd_soc_pcm_runtime *rtd = list_first_entry(
+			&card->rtd_list, struct snd_soc_pcm_runtime, list);
+	struct snd_soc_dai **codec_dais = rtd->codec_dais;
+	int num_codecs = rtd->num_codecs;
 
 	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
 	unsigned int *item = ucontrol->value.enumerated.item;
