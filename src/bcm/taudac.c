@@ -324,6 +324,93 @@ static int taudac_codecs_startup(struct snd_soc_pcm_runtime *rtd)
 }
 
 /*
+ * asoc controls
+ */
+static int codec_get_enum(struct snd_kcontrol *kcontrol,
+		struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
+	struct snd_soc_dai **codec_dais = card->rtd->codec_dais;
+	int num_codecs = card->rtd->num_codecs;
+
+	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
+	unsigned int reg_val[2], val[2], item;
+	int i;
+
+	for (i = 0; i < num_codecs; i++) {
+		reg_val[i] = snd_soc_read(codec_dais[i]->codec, e->reg);
+		val[i] = (reg_val[i] >> e->shift_l) & e->mask;
+		dev_dbg(codec_dais[i]->codec->dev,
+			"%s: reg = %u, reg_val = 0x%04x, val = 0x%04x",
+			__func__, e->reg, reg_val[i], val[i]);
+	}
+
+	/* Both codecs should have the same value */
+	if (WARN_ON(val[0] != val[1]))
+		return -EINVAL;
+
+	item = snd_soc_enum_val_to_item(e, val[0]);
+	ucontrol->value.enumerated.item[0] = item;
+
+	return 0;
+}
+
+static int codec_put_enum(struct snd_kcontrol *kcontrol,
+		struct snd_ctl_elem_value *ucontrol)
+{
+	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
+	struct snd_soc_dai **codec_dais = card->rtd->codec_dais;
+	int num_codecs = card->rtd->num_codecs;
+
+	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
+	unsigned int *item = ucontrol->value.enumerated.item;
+	unsigned int val;
+	unsigned int mask;
+	int ret, i;
+
+	if (item[0] >= e->items)
+		return -EINVAL;
+
+	val = snd_soc_enum_item_to_val(e, item[0]) << e->shift_l;
+	mask = e->mask << e->shift_l;
+
+	for (i = 0; i < num_codecs; i++) {
+		dev_dbg(codec_dais[i]->codec->dev,
+			"%s: reg = %u, mask = 0x%04x, val = 0x%04x",
+			__func__, e->reg, mask, val);
+		ret = snd_soc_update_bits(codec_dais[i]->codec, e->reg, mask,
+				val);
+		if (ret < 0)
+			return ret;
+	}
+
+	return 0;
+}
+
+// TODO: Add DE-EMPHASIS control
+
+static const char *codec_att2db_texts[] = {"Off", "On"};
+static const char *codec_dither_texts[] = {"Off", "RPDF", "TPDF", "HPDF"};
+static const char *codec_filter_texts[] = {"Response 1", "Response 2",
+		"Response 3", "Response 4", "Response 5"};
+
+static SOC_ENUM_SINGLE_DECL(codec_att2db_enum,
+		WM8741_VOLUME_CONTROL, WM8741_ATT2DB_SHIFT, codec_att2db_texts);
+static SOC_ENUM_SINGLE_DECL(codec_dither_enum,
+		WM8741_MODE_CONTROL_2, WM8741_DITHER_SHIFT, codec_dither_texts);
+static SOC_ENUM_SINGLE_DECL(codec_filter_enum,
+		WM8741_FILTER_CONTROL, WM8741_FIRSEL_SHIFT, codec_filter_texts);
+
+static const struct snd_kcontrol_new taudac_controls[] = {
+	SOC_ENUM_EXT("Anti-Clipping Mode", codec_att2db_enum,
+			codec_get_enum, codec_put_enum),
+	SOC_ENUM_EXT("Dither", codec_dither_enum,
+			codec_get_enum, codec_put_enum),
+	SOC_ENUM_EXT("Filter", codec_filter_enum,
+			codec_get_enum, codec_put_enum),
+};
+
+/*
  * asoc digital audio interface
  */
 static int taudac_init(struct snd_soc_pcm_runtime *rtd)
@@ -478,11 +565,13 @@ static struct snd_soc_dai_link taudac_dai[] = {
  * asoc machine driver
  */
 static struct snd_soc_card taudac_card = {
-	.name        = "TauDAC",
-	.dai_link    = taudac_dai,
-	.num_links   = ARRAY_SIZE(taudac_dai),
-	.codec_conf  = taudac_codec_conf,
-	.num_configs = ARRAY_SIZE(taudac_codec_conf),
+	.name         = "TauDAC",
+	.dai_link     = taudac_dai,
+	.num_links    = ARRAY_SIZE(taudac_dai),
+	.codec_conf   = taudac_codec_conf,
+	.num_configs  = ARRAY_SIZE(taudac_codec_conf),
+	.controls     = taudac_controls,
+	.num_controls = ARRAY_SIZE(taudac_controls),
 };
 
 /*
