@@ -20,8 +20,8 @@ install: all
 		-C $(KERNELDIR)/build M=$(PWD) modules_install
 		@depmod -a $(kernelver)
 
-dump: all
-	@install -m 644 -D -t ../$(DUMPDIR)/$(KERNELDIR)/kernel/$(ORIGDIR) \
+release: all
+	@install -m 644 -vD -t ../$(RELEASEDIR)/$(KERNELDIR)/kernel/$(ORIGDIR) \
 		$(MODULENAME)
 
 clean:
