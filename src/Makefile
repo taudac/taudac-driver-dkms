@@ -44,8 +44,9 @@ $(INSTALLDIRS):
 	$(MAKE) -C $(@:install-%=%) install
 
 release: release_prepare $(RELEASEDIRS)
-	@git -C $(RELEASEDIR) commit -am "Bump to $(GITTAG)"
-	@$(call ok,"Modules copied to $(RELEASEDIR)")
+	@echo $(GITHASH) > $(RELEASEDIR)/taudac_git_hash
+	@echo "#Bump to $(GITTAG)" > $(RELEASEDIR)/.git/taudac_git_tag
+	@$(call ok,"[$(GITTAG)] Modules copied to $(realpath $(RELEASEDIR))")
 $(RELEASEDIRS):
 	$(MAKE) -C $(@:release-%=%) release
 
@@ -53,7 +54,6 @@ release_prepare:
 	@git describe --exact-match HEAD > /dev/null || \
 		$(call warn,"HEAD is not tagged!")
 	@mkdir -p $(RELEASEDIR)
-	@echo $(GITHASH) > $(RELEASEDIR)/taudac_git_hash
 
 uninstall: $(UNINSTALLDIRS)
 $(UNINSTALLDIRS):
