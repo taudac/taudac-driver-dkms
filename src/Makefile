@@ -13,12 +13,17 @@ INSTALLDIRS = $(DIRS:%=install-%)
 UNINSTALLDIRS = $(DIRS:%=uninstall-%)
 RELEASEDIRS = $(DIRS:%=release-%)
 
-cgreen = '\033[1;32m'
-cred   = '\033[1;31m'
-cend   = '\033[0m'
+cred = '\033[1;31m'
+cgrn = '\033[1;32m'
+cylw = '\033[1;33m'
+cend = '\033[0m'
 
 define ok
-	@echo $(cgreen)$(1)$(cend)
+	echo $(cgrn)$(1)$(cend)
+endef
+
+define warn
+	echo $(cylw)$(1)$(cend)
 endef
 
 define die
@@ -40,13 +45,13 @@ $(INSTALLDIRS):
 
 release: release_prepare $(RELEASEDIRS)
 	@git -C $(RELEASEDIR) commit -am "Bump to $(GITTAG)"
-	$(call ok,"Modules copied to $(RELEASEDIR)")
+	@$(call ok,"Modules copied to $(RELEASEDIR)")
 $(RELEASEDIRS):
 	$(MAKE) -C $(@:release-%=%) release
 
 release_prepare:
 	@git describe --exact-match HEAD > /dev/null || \
-		$(call die,"HEAD is not tagged!")
+		$(call warn,"HEAD is not tagged!")
 	@mkdir -p $(RELEASEDIR)
 	@echo $(GITHASH) > $(RELEASEDIR)/taudac_git_hash
 
