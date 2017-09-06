@@ -3,6 +3,7 @@ export KERNELDIR ?= /lib/modules/${kernelver}
 export DUMPDIR ?= ../../modules
 
 GITHASH := $(shell git rev-parse HEAD)
+GITTAG  := $(shell git describe --tags)
 
 DIRS = bcm codecs clk
 BUILDDIRS = $(DIRS:%=build-%)
@@ -12,6 +13,7 @@ UNINSTALLDIRS = $(DIRS:%=uninstall-%)
 DUMPDIRS = $(DIRS:%=modules_dump-%)
 
 BfGreen='\033[1;32m'
+BfRed='\033[1;31m'
 NoColor='\033[0m'
 
 all: $(BUILDDIRS)
@@ -20,7 +22,7 @@ $(BUILDDIRS):
 	$(MAKE) -C $(@:build-%=%)
 
 clean: $(CLEANDIRS)
-$(CLEANDIRS): 
+$(CLEANDIRS):
 	$(MAKE) -C $(@:clean-%=%) clean
 
 install: $(INSTALLDIRS)
@@ -28,15 +30,17 @@ $(INSTALLDIRS):
 	$(MAKE) -C $(@:install-%=%) install
 
 dump: dump_prepare $(DUMPDIRS)
-	echo $(BfGreen)"Modules copied to $(DUMPDIR)"$(NoColor)
+	@git -C $(DUMPDIR) commit -am "Bump to $(GITTAG)"
+	@echo $(BfGreen)"Modules copied to $(DUMPDIR)"$(NoColor)
 $(DUMPDIRS):
 	$(MAKE) -C $(@:modules_dump-%=%) dump
 
 dump_prepare:
+	@git describe --exact-match HEAD || \
+		(echo $(BfRed)"HEAD is not tagged!"$(NoColor); exit 1;)
 	@mkdir -p $(DUMPDIR)
 	@echo $(GITHASH) > $(DUMPDIR)/taudac_git_hash
 
 uninstall: $(UNINSTALLDIRS)
 $(UNINSTALLDIRS):
 	$(MAKE) -C $(@:uninstall-%=%) uninstall
-
