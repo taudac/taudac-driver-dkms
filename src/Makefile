@@ -44,7 +44,7 @@ $(INSTALLDIRS):
 	$(MAKE) -C $(@:install-%=%) install
 
 release: release_prepare $(RELEASEDIRS)
-	@echo $(GITHASH) > $(RELEASEDIR)/taudac_git_hash
+	@echo $(GITHASH) > $(RELEASEDIR)/taudac.modules.hash
 	@echo "#Bump to $(GITTAG)" > $(RELEASEDIR)/.git/taudac_git_tag
 	@$(call ok,"[$(GITTAG)] Modules copied to $(realpath $(RELEASEDIR))")
 $(RELEASEDIRS):
