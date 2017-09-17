@@ -230,6 +230,14 @@ static struct snd_soc_codec_conf taudac_codec_conf[] = {
 
 static const struct reg_default wm8741_reg_updates[] = {
 	/**
+	 * R0..R3 - Attenuation:
+	 *   set attenuation to 0dB and update the value on MSB write
+	 */
+	{0x00, 0x0000},
+	{0x01, 0x0020},
+	{0x02, 0x0000},
+	{0x03, 0x0020},
+	/**
 	 * R4 - Volume Control:
 	 *   enable Zero Detect, Mute and Volume Ramp, disable Zero Flag output
 	 */
