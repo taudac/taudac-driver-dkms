@@ -4,6 +4,10 @@ export KERNELDIR ?= /lib/modules/${kernelver}
 export KERNELDIR  ?= /lib/modules/${kernelver}
 export RELEASEDIR ?= ../../modules
 
+export MACHINE ?= $(shell uname -m)
+export DEBTMPDIR = ../debian/tmp
+export DEBMODDIR = dkms_main_tree/$(kernelver)/$(MACHINE)/module
+
 GITHASH := $(shell git rev-parse HEAD)
 GITTAG  := $(shell git describe --tags)
 
@@ -13,6 +17,7 @@ CLEANDIRS = $(DIRS:%=clean-%)
 INSTALLDIRS = $(DIRS:%=install-%)
 UNINSTALLDIRS = $(DIRS:%=uninstall-%)
 RELEASEDIRS = $(DIRS:%=release-%)
+DEBDIRS = $(DIRS:%=deb-%)
 
 cred = '\033[1;31m'
 cgrn = '\033[1;32m'
@@ -55,6 +60,18 @@ release_prepare:
 	@git describe --exact-match HEAD > /dev/null || \
 		$(call warn,"HEAD is not tagged!")
 	@mkdir -p $(RELEASEDIR)
+
+deb: deb_prepare $(DEBDIRS)
+	@tar -czf $(DEBTMPDIR)/$(GITTAG).dkms.tar.gz \
+		 $(DEBTMPDIR)/dkms_*
+$(DEBDIRS):
+	$(MAKE) -C $(@:deb-%=%) deb
+
+deb_prepare:
+	@install -d $(DEBTMPDIR)
+	@install -d $(DEBTMPDIR)/dkms_binaries_only
+	@install -d $(DEBTMPDIR)/$(DEBMODDIR)
+	@install -m 755 /usr/lib/dkms/common.postinst $(DEBTMPDIR)/postinst
 
 uninstall: $(UNINSTALLDIRS)
 $(UNINSTALLDIRS):

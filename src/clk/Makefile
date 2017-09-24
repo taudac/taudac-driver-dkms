@@ -23,6 +23,9 @@ release: all
 	@install -m 644 -vD -t ../$(RELEASEDIR)$(KERNELDIR)/kernel/$(ORIGDIR) \
 		$(MODULENAME)
 
+deb: all
+	@install -m 644 -vD -t ../$(DEBTMPDIR)/$(DEBMODDIR) $(MODULENAME)
+
 clean:
 	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) clean
 
