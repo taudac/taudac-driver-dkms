@@ -15,12 +15,12 @@ We will build and install the driver using DKMS.
 
 If not already done, download and unzip the driver source directory:
 
-    wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-2.0.0.tar.gz
-    tar -xzf taudac-2.0.0.tar.gz
+    wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-2.2.2.tar.gz
+    tar -xzf taudac-2.2.2.tar.gz
 
 Now copy the driver source to a directory where DKMS can find it:
 
-    sudo cp -r taudac-driver-dkms-taudac-2.0.0 /usr/src/taudac-2.0.0
+    sudo cp -r taudac-driver-dkms-taudac-2.2.2 /usr/src/taudac-2.2.2
 
 Install the build dependencies:
 
@@ -46,13 +46,13 @@ The **Volumio** way:
 
 To build and install the driver using DKMS do:
 
-    sudo dkms install -m taudac -v 2.0.0 --force
+    sudo dkms install -m taudac -v 2.2.2 --force
 
 ### Uninstalling the driver
 
 The driver can be uninstalled using DKMS with:
 
-    sudo dkms remove -m taudac -v 2.0.0 --all
+    sudo dkms remove -m taudac -v 2.2.2 --all
 
 Configuration
 -------------
@@ -69,4 +69,3 @@ References
 
 - [TauDAC homepage](http://www.taudac.com)
 - [TauDAC git-repository](https://github.com/taudac/taudac-driver-dkms)
-
