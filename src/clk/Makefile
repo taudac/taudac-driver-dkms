@@ -1,6 +1,8 @@
 PWD := $(shell pwd)
 
+ORIGDIR = drivers/clk
 INSTALLDIR = taudac
+MODULENAME = clk-si5351.ko
 
 obj-m += clk-si5351.o
 
@@ -17,11 +19,14 @@ install: all
 		-C $(KERNELDIR)/build M=$(PWD) modules_install
 		@depmod -a $(kernelver)
 
+release: all
+	@install -m 644 -vD -t ../$(RELEASEDIR)$(KERNELDIR)/kernel/$(ORIGDIR) \
+		$(MODULENAME)
+
 clean:
 	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) clean
 
 .PHONY: uninstall
 uninstall:
-	@rm -f $(KERNELDIR)/$(INSTALLDIR)/clk-si5351.ko
+	@rm -f $(KERNELDIR)/$(INSTALLDIR)/$(MODULENAME)
 	@depmod -a $(kernelver)
-

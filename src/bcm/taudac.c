@@ -230,6 +230,14 @@ static struct snd_soc_codec_conf taudac_codec_conf[] = {
 
 static const struct reg_default wm8741_reg_updates[] = {
 	/**
+	 * R0..R3 - Attenuation:
+	 *   set attenuation to 0dB and update the value on MSB write
+	 */
+	{0x00, 0x0000},
+	{0x01, 0x0020},
+	{0x02, 0x0000},
+	{0x03, 0x0020},
+	/**
 	 * R4 - Volume Control:
 	 *   enable Zero Detect, Mute and Volume Ramp, disable Zero Flag output
 	 */
@@ -285,7 +293,7 @@ static void taudac_codecs_shutdown(struct snd_soc_pcm_runtime *rtd)
 }
 
 static int taudac_codecs_prepare(struct snd_soc_pcm_runtime *rtd,
-		unsigned int mclk_rate, unsigned int fmt, unsigned int osr)
+		unsigned int mclk_rate, unsigned int fmt)
 {
 	int ret, i;
 	struct snd_soc_dai **codec_dais = rtd->codec_dais;
@@ -300,13 +308,6 @@ static int taudac_codecs_prepare(struct snd_soc_pcm_runtime *rtd,
 
 		/* set codec DAI configuration */
 		ret = snd_soc_dai_set_fmt(codec_dais[i], fmt);
-		if (ret < 0)
-			return ret;
-
-		/* set codec oversampling rate */
-		ret = snd_soc_update_bits(codec_dais[i]->codec,
-				WM8741_MODE_CONTROL_1,
-				WM8741_OSR_MASK, osr << WM8741_OSR_SHIFT);
 		if (ret < 0)
 			return ret;
 	}
@@ -337,8 +338,10 @@ static int codec_get_enum(struct snd_kcontrol *kcontrol,
 		struct snd_ctl_elem_value *ucontrol)
 {
 	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
-	struct snd_soc_dai **codec_dais = card->rtd->codec_dais;
-	int num_codecs = card->rtd->num_codecs;
+	struct snd_soc_pcm_runtime *rtd = list_first_entry(
+			&card->rtd_list, struct snd_soc_pcm_runtime, list);
+	struct snd_soc_dai **codec_dais = rtd->codec_dais;
+	int num_codecs = rtd->num_codecs;
 
 	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
 	unsigned int reg_val[2], val[2], item;
@@ -366,8 +369,10 @@ static int codec_put_enum(struct snd_kcontrol *kcontrol,
 		struct snd_ctl_elem_value *ucontrol)
 {
 	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
-	struct snd_soc_dai **codec_dais = card->rtd->codec_dais;
-	int num_codecs = card->rtd->num_codecs;
+	struct snd_soc_pcm_runtime *rtd = list_first_entry(
+			&card->rtd_list, struct snd_soc_pcm_runtime, list);
+	struct snd_soc_dai **codec_dais = rtd->codec_dais;
+	int num_codecs = rtd->num_codecs;
 
 	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
 	unsigned int *item = ucontrol->value.enumerated.item;
@@ -466,7 +471,6 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	unsigned int mclk_rate, bclk_rate;
 	unsigned int lrclk_rate = params_rate(params);
 	int width = params_width(params);
-	u16 osr;
 
 	unsigned int fmt = SND_SOC_DAIFMT_I2S;
 	unsigned int cpu_fmt;
@@ -518,16 +522,8 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	if (ret < 0)
 		return ret;
 
-	/* calculate oversampling rate */
-	if (lrclk_rate <= 48000)
-		osr = 0; /* TODO: define WM8741_OSR_LOW etc. in wm8741.h */
-	else if (lrclk_rate <= 96000)
-		osr = 1;
-	else
-		osr = 2;
-
 	/* prepare codecs */
-	ret = taudac_codecs_prepare(rtd, mclk_rate, codec_fmt, osr);
+	ret = taudac_codecs_prepare(rtd, mclk_rate, codec_fmt);
 	if (ret < 0)
 		return ret;
 
