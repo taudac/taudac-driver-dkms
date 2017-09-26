@@ -31,33 +31,39 @@ define die
 	(echo $(cred)$(1)$(cend); exit 1)
 endef
 
-all: $(BUILDDIRS)
 $(DIRS): $(BUILDDIRS)
-$(BUILDDIRS):
-	$(MAKE) -C $(@:build-%=%)
 
-clean: $(CLEANDIRS)
-$(CLEANDIRS): 
-	$(MAKE) -C $(@:clean-%=%) clean
+all: $(BUILDDIRS)
 
 install: $(INSTALLDIRS)
-$(INSTALLDIRS):
-	$(MAKE) -C $(@:install-%=%) install
+
+uninstall: $(UNINSTALLDIRS)
 
 package: $(RELEASEDIRS)
+
+release_prepare:
+	@git describe --exact-match HEAD > /dev/null || \
+		$(call warn,"HEAD is not tagged!")
 
 release: release_prepare $(RELEASEDIRS)
 	@echo $(GITHASH) > $(RELEASEDIR)/taudac.modules.hash
 	@echo "#Bump to $(GITTAG)" > $(RELEASEDIR)/.git/taudac_git_tag
 	@$(call ok,"[$(GITTAG)] Modules copied to $(realpath $(RELEASEDIR))")
+
+clean: $(CLEANDIRS)
+
+$(BUILDDIRS):
+	$(MAKE) -C $(@:build-%=%)
+
+$(INSTALLDIRS):
+	$(MAKE) -C $(@:install-%=%) install
+
+$(UNINSTALLDIRS):
+	$(MAKE) -C $(@:uninstall-%=%) uninstall
+
 $(RELEASEDIRS):
 	$(MAKE) -C $(@:release-%=%) release
 
-release_prepare:
-	@git describe --exact-match HEAD > /dev/null || \
-		$(call warn,"HEAD is not tagged!")
-	@mkdir -p $(RELEASEDIR)
+$(CLEANDIRS):
+	$(MAKE) -C $(@:clean-%=%) clean
 
-uninstall: $(UNINSTALLDIRS)
-$(UNINSTALLDIRS):
-	$(MAKE) -C $(@:uninstall-%=%) uninstall
