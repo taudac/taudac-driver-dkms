@@ -20,7 +20,7 @@ install: all
 		@depmod -a $(kernelver)
 
 release: all
-	@install -m 644 -vD -t ../$(RELEASEDIR)$(KERNELDIR)/kernel/$(ORIGDIR) \
+	@install -m 644 -vD -t $(RELEASEDIR)$(KERNELDIR)/kernel/$(ORIGDIR) \
 		$(MODULENAME)
 
 clean:

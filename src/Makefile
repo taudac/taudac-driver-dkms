@@ -2,7 +2,7 @@ export kernelver ?= $(shell uname -r)
 export KERNELDIR ?= /lib/modules/${kernelver}
 
 export KERNELDIR  ?= /lib/modules/${kernelver}
-export RELEASEDIR ?= ../../modules
+export RELEASEDIR ?= $(realpath ../..)/modules
 
 GITHASH := $(shell git rev-parse HEAD)
 GITTAG  := $(shell git describe --tags)
