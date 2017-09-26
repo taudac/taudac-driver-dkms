@@ -2,7 +2,7 @@ export kernelver ?= $(shell uname -r)
 export KERNELDIR ?= /lib/modules/${kernelver}
 
 export KERNELDIR  ?= /lib/modules/${kernelver}
-export RELEASEDIR ?= $(realpath ../..)/modules
+export PACKAGEDIR ?= $(realpath ../..)/modules
 
 GITHASH := $(shell git rev-parse HEAD)
 GITTAG  := $(shell git describe --tags)
@@ -46,9 +46,9 @@ release_prepare:
 		$(call warn,"HEAD is not tagged!")
 
 release: release_prepare $(RELEASEDIRS)
-	@echo $(GITHASH) > $(RELEASEDIR)/taudac.modules.hash
-	@echo "#Bump to $(GITTAG)" > $(RELEASEDIR)/.git/taudac_git_tag
-	@$(call ok,"[$(GITTAG)] Modules copied to $(realpath $(RELEASEDIR))")
+	@echo $(GITHASH) > $(PACKAGEDIR)/taudac.modules.hash
+	@echo "#Bump to $(GITTAG)" > $(PACKAGEDIR)/.git/taudac_git_tag
+	@$(call ok,"[$(GITTAG)] Modules copied to $(realpath $(PACKAGEDIR))")
 
 clean: $(CLEANDIRS)
 
