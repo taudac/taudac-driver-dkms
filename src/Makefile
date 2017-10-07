@@ -1,5 +1,4 @@
 export kernelver ?= $(shell uname -r)
-export KERNELDIR ?= /lib/modules/${kernelver}
 
 export KERNELDIR  ?= /lib/modules/${kernelver}
 export PACKAGEDIR ?= $(realpath ../..)/modules
