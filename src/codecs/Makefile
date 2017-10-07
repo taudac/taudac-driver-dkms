@@ -21,8 +21,7 @@ install: all
 		@depmod -a $(kernelver)
 
 release: all
-	@install -m 644 -vD -t $(PACKAGEDIR)$(KERNELDIR)/kernel/$(ORIGDIR) \
-		$(MODULENAME)
+	@install -m 644 -vD -t $(RELEASEDIR)/kernel/$(ORIGDIR) $(MODULENAME)
 
 clean:
 	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) clean
