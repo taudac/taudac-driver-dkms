@@ -7,6 +7,8 @@ export RELEASEDIR ?= $(PACKAGEDIR)/lib/modules/${kernelver}
 GITHASH := $(shell git rev-parse HEAD)
 GITTAG  := $(shell git describe --tags)
 
+KERNELRELEASE := $(shell echo $(kernelver) | sed -r 's/([0-9\.]+).*/\1/')
+
 DIRS = bcm codecs clk
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
@@ -47,7 +49,7 @@ release_prepare:
 
 release: release_prepare $(RELEASEDIRS)
 	@echo $(GITHASH) > $(PACKAGEDIR)/taudac.modules.hash
-	@echo "#Bump to $(GITTAG)" > $(PACKAGEDIR)/.git/taudac_git_tag
+	@echo "#$(GITTAG) for $(KERNELRELEASE)" > $(PACKAGEDIR)/.git/taudac_git_tag
 	@$(call ok,"[$(GITTAG)] Modules copied to $(realpath $(PACKAGEDIR))")
 
 clean: $(CLEANDIRS)
