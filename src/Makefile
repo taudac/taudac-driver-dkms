@@ -1,6 +1,6 @@
 export kernelver ?= $(shell uname -r)
 
-export KERNELDIR  ?= /lib/modules/${kernelver}
+export KERNELDIR  ?= $(prefix)/lib/modules/${kernelver}
 export PACKAGEDIR ?= $(realpath ../..)/modules
 
 GITHASH := $(shell git rev-parse HEAD)
@@ -65,4 +65,3 @@ $(RELEASEDIRS):
 
 $(CLEANDIRS):
 	$(MAKE) -C $(@:clean-%=%) clean
-
