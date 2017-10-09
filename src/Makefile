@@ -4,8 +4,6 @@ export KERNELDIR  ?= $(prefix)/lib/modules/${kernelver}
 export PACKAGEDIR ?= $(realpath ../..)/modules
 export RELEASEDIR ?= $(PACKAGEDIR)/lib/modules/${kernelver}
 
-KERNELRELEASE := $(shell echo $(kernelver) | sed -r 's/([0-9\.]+).*/\1/')
-
 DIRS = bcm codecs clk
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
@@ -47,6 +45,7 @@ release_prepare:
 release: release_prepare $(RELEASEDIRS)
 	$(eval GITHASH := $(shell git rev-parse HEAD))
 	$(eval GITTAG := $(shell git describe --tags))
+	$(eval KERNELRELEASE := $(shell echo $(kernelver) | sed -r 's/([0-9\.]+).*/\1/'))
 	@echo $(GITHASH) > $(PACKAGEDIR)/taudac.modules.hash
 	@echo "#$(GITTAG) for $(KERNELRELEASE)" > $(PACKAGEDIR)/.git/taudac_git_tag
 	@$(call ok,"[$(GITTAG)] Modules copied to $(realpath $(PACKAGEDIR))")
