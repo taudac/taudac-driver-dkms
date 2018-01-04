@@ -2,16 +2,10 @@ PWD := $(shell pwd)
 
 INSTALLDIR = taudac
 
-obj-m += clk-si5351.o
-
-DEBUG ?= 0
-ifeq ($(DEBUG), 1)
-    CFLAGS_clk-si5351.o := -DDEBUG
-endif
+obj-m += rational.o
 
 all:
-	$(MAKE) -C $(KERNELDIR)/build  M=$(PWD) \
-		KBUILD_EXTRA_SYMBOLS=$(PWD)/../lib/Module.symvers modules
+	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) modules
 
 install: all
 	$(MAKE) INSTALL_MOD_DIR=$(INSTALLDIR) \
@@ -23,6 +17,6 @@ clean:
 
 .PHONY: uninstall
 uninstall:
-	@rm -f $(KERNELDIR)/$(INSTALLDIR)/clk-si5351.ko
+	@rm -f $(KERNELDIR)/$(INSTALLDIR)/snd-soc-taudac.ko
 	@depmod -a $(kernelver)
 
