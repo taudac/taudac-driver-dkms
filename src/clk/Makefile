@@ -2,10 +2,12 @@ PWD := $(shell pwd)
 
 INSTALLDIR = taudac
 
+obj-m += clk-gpio.o
 obj-m += clk-si5351.o
 
 DEBUG ?= 0
 ifeq ($(DEBUG), 1)
+    CFLAGS_clk-gpio.o := -DDEBUG
     CFLAGS_clk-si5351.o := -DDEBUG
 endif
 
