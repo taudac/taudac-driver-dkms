@@ -1,8 +1,8 @@
 export kernelver ?= $(shell uname -r)
 
 export KERNELDIR  ?= $(prefix)/lib/modules/${kernelver}
-export PACKAGEDIR ?= $(realpath ../..)/modules
-export RELEASEDIR ?= $(PACKAGEDIR)/lib/modules/${kernelver}
+export PACKAGEDIR ?= ../../modules
+export RELEASEDIR ?= $(realpath $(PACKAGEDIR))/lib/modules/${kernelver}
 
 DIRS = bcm codecs clk
 BUILDDIRS = $(DIRS:%=build-%)
@@ -39,6 +39,7 @@ uninstall: $(UNINSTALLDIRS)
 package: $(RELEASEDIRS)
 
 release_prepare:
+	@mkdir -pv $(PACKAGEDIR)/.git
 	@git describe --exact-match HEAD > /dev/null || \
 		$(call warn,"HEAD is not tagged!")
 
