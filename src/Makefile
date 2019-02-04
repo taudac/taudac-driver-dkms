@@ -38,12 +38,12 @@ uninstall: $(UNINSTALLDIRS)
 
 package: $(RELEASEDIRS)
 
-release_prepare:
+_release_prepare:
 	@mkdir -pv $(PACKAGEDIR)/.git
 	@git describe --exact-match HEAD > /dev/null || \
 		$(call warn,"HEAD is not tagged!")
 
-release: release_prepare $(RELEASEDIRS)
+release: _release_prepare $(RELEASEDIRS)
 	$(eval GITHASH := $(shell git rev-parse HEAD))
 	$(eval GITTAG := $(shell git describe --tags))
 	$(eval KERNELRELEASE := $(shell echo $(kernelver) | sed -r 's/([0-9\.]+).*/\1/'))
