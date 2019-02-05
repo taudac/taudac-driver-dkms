@@ -4,6 +4,10 @@ export KERNELDIR  ?= $(prefix)/lib/modules/${kernelver}
 export PACKAGEDIR ?= ../../modules
 export MODULESDIR ?= lib/modules/${kernelver}
 
+TCEDIR  ?= ../../tce
+TMPDIR  := $(shell mktemp -d)
+TCZFILE := taudac-modules-$(kernelver).tcz
+
 DIRS = bcm codecs clk
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
@@ -51,6 +55,14 @@ release: package _release_prepare
 	@echo $(GITHASH) > $(PACKAGEDIR)/taudac.modules.hash
 	@echo "#$(GITTAG) for $(KERNELRELEASE)" > $(PACKAGEDIR)/.git/taudac_git_tag
 	@$(call ok,"[$(GITTAG)] Modules copied to $(realpath $(PACKAGEDIR))")
+
+tcz: export RELEASEDIR := $(TMPDIR)/$(MODULESDIR)
+tcz: export ORIGDIR := extra
+tcz: $(RELEASEDIRS)
+	@mkdir -pv $(TCEDIR)
+	mksquashfs $(TMPDIR) $(TCEDIR)/$(TCZFILE) -noappend \
+		-no-xattrs -force-gid 50 -force-uid 1001
+	@$(call ok,"$(TCZFILE) written to $(realpath $(TCEDIR))")
 
 clean: $(CLEANDIRS)
 
