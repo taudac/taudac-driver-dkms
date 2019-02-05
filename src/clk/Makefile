@@ -1,6 +1,6 @@
 PWD := $(shell pwd)
 
-ORIGDIR = drivers/clk
+ORIGDIR = kernel/drivers/clk
 INSTALLDIR = taudac
 MODULENAME = clk-si5351.ko
 
@@ -20,7 +20,7 @@ install: all
 		@depmod -a $(kernelver)
 
 release: all
-	@install -m 644 -vD -t $(RELEASEDIR)/kernel/$(ORIGDIR) $(MODULENAME)
+	@install -m 644 -vD -t $(RELEASEDIR)/$(ORIGDIR) $(MODULENAME)
 
 clean:
 	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) clean

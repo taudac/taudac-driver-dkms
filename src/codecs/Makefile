@@ -1,6 +1,6 @@
 PWD := $(shell pwd)
 
-ORIGDIR = sound/soc/codecs
+ORIGDIR = kernel/sound/soc/codecs
 INSTALLDIR = taudac
 MODULENAME = snd-soc-wm8741.ko
 
@@ -21,7 +21,7 @@ install: all
 		@depmod -a $(kernelver)
 
 release: all
-	@install -m 644 -vD -t $(RELEASEDIR)/kernel/$(ORIGDIR) $(MODULENAME)
+	@install -m 644 -vD -t $(RELEASEDIR)/$(ORIGDIR) $(MODULENAME)
 
 clean:
 	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) clean
