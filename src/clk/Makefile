@@ -1,6 +1,6 @@
 PWD := $(shell pwd)
 
-ORIGDIR = kernel/drivers/clk
+ORIGDIR ?= kernel/drivers/clk
 INSTALLDIR = taudac
 MODULENAME = clk-si5351.ko
 

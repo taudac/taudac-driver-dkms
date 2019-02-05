@@ -1,6 +1,6 @@
 PWD := $(shell pwd)
 
-ORIGDIR = kernel/sound/soc/codecs
+ORIGDIR ?= kernel/sound/soc/codecs
 INSTALLDIR = taudac
 MODULENAME = snd-soc-wm8741.ko
 

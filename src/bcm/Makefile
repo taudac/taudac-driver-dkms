@@ -1,6 +1,6 @@
 PWD := $(shell pwd)
 
-ORIGDIR = kernel/sound/soc/bcm
+ORIGDIR ?= kernel/sound/soc/bcm
 INSTALLDIR = taudac
 MODULENAME = snd-soc-taudac.ko
 
