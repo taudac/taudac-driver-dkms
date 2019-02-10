@@ -434,8 +434,6 @@ int wm8741_mute(struct snd_soc_dai *codec_dai, int mute)
 {
 	struct snd_soc_codec *codec = codec_dai->codec;
 
-	dev_dbg(codec->dev, "%s:    mute = %d\n", __func__, mute);
-
 	snd_soc_update_bits(codec, WM8741_VOLUME_CONTROL,
 			WM8741_SOFT_MASK, !!mute << WM8741_SOFT_SHIFT);
 	return 0;
