@@ -260,6 +260,7 @@ static int wm8741_hw_params(struct snd_pcm_substream *substream,
 	struct wm8741_priv *wm8741 = snd_soc_codec_get_drvdata(codec);
 	unsigned int iface;
 	u16 mode = snd_soc_read(codec, WM8741_MODE_CONTROL_1) & 0x183;
+	int i;
 
 	/* The set of sample rates that can be supported depends on the
 	 * MCLK supplied to the CODEC - enforce this.
@@ -270,27 +271,13 @@ static int wm8741_hw_params(struct snd_pcm_substream *substream,
 		return -EINVAL;
 	}
 
-	/* MCLK to LRCLK sampling rate ratio */
-	switch (wm8741->sysclk / params_rate(params)) {
-	case 128:
-		mode |= 0x0004;
-		break;
-	case 192:
-		mode |= 0x0008;
-		break;
-	case 256:
-		mode |= 0x000C;
-		break;
-	case 384:
-		mode |= 0x0010;
-		break;
-	case 512:
-		mode |= 0x0014;
-		break;
-	case 768:
-		mode |= 0x0018;
-		break;
-	default:
+	/* Find a supported LRCLK rate */
+	for (i = 0; i < wm8741->sysclk_constraints->count; i++) {
+		if (wm8741->sysclk_constraints->list[i] == params_rate(params))
+			break;
+	}
+
+	if (i == wm8741->sysclk_constraints->count) {
 		dev_err(codec->dev, "LRCLK %d unsupported with MCLK %d\n",
 			params_rate(params), wm8741->sysclk);
 		return -EINVAL;
