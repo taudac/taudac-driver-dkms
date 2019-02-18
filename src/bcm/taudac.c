@@ -260,7 +260,7 @@ static int taudac_codecs_init(struct snd_soc_pcm_runtime *rtd)
 	for (i = 0; i < num_codecs; i++) {
 		/* change some codec settings */
 		for (k = 0; k < ARRAY_SIZE(wm8741_reg_updates); k++) {
-			ret = snd_soc_write(codec_dais[i]->codec,
+			ret = snd_soc_component_write(codec_dais[i]->component,
 					wm8741_reg_updates[k].reg,
 					wm8741_reg_updates[k].def);
 
@@ -284,8 +284,9 @@ static void taudac_codecs_shutdown(struct snd_soc_pcm_runtime *rtd)
 
 	for (i = 0; i < num_codecs; i++) {
 		/* disable codecs - avoid audible glitches */
-		snd_soc_update_bits(codec_dais[i]->codec, WM8741_FORMAT_CONTROL,
-				WM8741_PWDN_MASK, WM8741_PWDN);
+		snd_soc_component_update_bits(codec_dais[i]->component,
+				WM8741_FORMAT_CONTROL, WM8741_PWDN_MASK,
+				WM8741_PWDN);
 		/* clear codec sysclk - restore rate constrants */
 		snd_soc_dai_set_sysclk(codec_dais[i], WM8741_SYSCLK, 0,
 				SND_SOC_CLOCK_IN);
@@ -322,7 +323,7 @@ static int taudac_codecs_startup(struct snd_soc_pcm_runtime *rtd)
 	int num_codecs = rtd->num_codecs;
 
 	for (i = 0; i < num_codecs; i++) {
-		ret = snd_soc_update_bits(codec_dais[i]->codec,
+		ret = snd_soc_component_update_bits(codec_dais[i]->component,
 				WM8741_FORMAT_CONTROL, WM8741_PWDN_MASK, 0);
 		if (ret < 0)
 			return ret;
@@ -348,9 +349,9 @@ static int codec_get_enum(struct snd_kcontrol *kcontrol,
 	int i;
 
 	for (i = 0; i < num_codecs; i++) {
-		reg_val[i] = snd_soc_read(codec_dais[i]->codec, e->reg);
+		snd_soc_component_read(codec_dais[i]->component, e->reg, &reg_val[i]);
 		val[i] = (reg_val[i] >> e->shift_l) & e->mask;
-		dev_dbg(codec_dais[i]->codec->dev,
+		dev_dbg(codec_dais[i]->component->dev,
 			"%s: reg = %u, reg_val = 0x%04x, val = 0x%04x",
 			__func__, e->reg, reg_val[i], val[i]);
 	}
@@ -387,10 +388,10 @@ static int codec_put_enum(struct snd_kcontrol *kcontrol,
 	mask = e->mask << e->shift_l;
 
 	for (i = 0; i < num_codecs; i++) {
-		dev_dbg(codec_dais[i]->codec->dev,
+		dev_dbg(codec_dais[i]->component->dev,
 			"%s: reg = %u, mask = 0x%04x, val = 0x%04x",
 			__func__, e->reg, mask, val);
-		ret = snd_soc_update_bits(codec_dais[i]->codec, e->reg, mask,
+		ret = snd_soc_component_update_bits(codec_dais[i]->component, e->reg, mask,
 				val);
 		if (ret < 0)
 			return ret;
