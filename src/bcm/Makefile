@@ -1,7 +1,11 @@
 PWD := $(shell pwd)
 
-ORIGDIR ?= kernel/sound/soc/bcm
-INSTALLDIR = taudac
+ifeq ($(INSTALL_TO_ORIGDIR), 1)
+    INSTALLDIR = kernel/sound/soc/bcm
+else
+    INSTALLDIR = taudac
+endif
+
 MODULENAME = snd-soc-taudac.ko
 
 snd-soc-taudac-objs := taudac.o
@@ -21,7 +25,7 @@ install: all
 		@depmod -a $(kernelver)
 
 release: all
-	@install -m 644 -vD -t $(RELEASEDIR)/$(ORIGDIR) $(MODULENAME)
+	@install -m 644 -vD -t $(RELEASEDIR)/$(INSTALLDIR) $(MODULENAME)
 
 clean:
 	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) clean
