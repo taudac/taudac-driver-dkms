@@ -917,6 +917,12 @@ static void _si5351_clkout_reset_pll(struct si5351_driver_data *drvdata, int num
 			 val & SI5351_CLK_PLL_SELECT ? SI5351_PLL_RESET_B :
 						       SI5351_PLL_RESET_A);
 
+	do {
+		dev_dbg(&drvdata->client->dev, "%s - %s: polling\n",
+			__func__, clk_hw_get_name(&drvdata->clkout[num].hw));
+		msleep(1);
+	} while (si5351_reg_read(drvdata, SI5351_PLL_RESET));
+
 	dev_dbg(&drvdata->client->dev, "%s - %s: pll = %d\n",
 		__func__, clk_hw_get_name(&drvdata->clkout[num].hw),
 		(val & SI5351_CLK_PLL_SELECT) ? 1 : 0);
@@ -936,11 +942,13 @@ static int si5351_clkout_prepare(struct clk_hw *hw)
 	 * Do a pll soft reset on the parent pll -- needed to get a
 	 * deterministic phase relationship between the output clocks.
 	 */
-	if (pdata->clkout[hwdata->num].pll_reset)
+	if (pdata->clkout[hwdata->num].pll_reset) {
 		_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
 
-	si5351_set_bits(hwdata->drvdata, SI5351_OUTPUT_ENABLE_CTRL,
-			(1 << hwdata->num), 0);
+		si5351_set_bits(hwdata->drvdata, SI5351_OUTPUT_ENABLE_CTRL,
+				((1 << hwdata->num) | 0x1F), 0);
+	}
+
 	return 0;
 }
 
