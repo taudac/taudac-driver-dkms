@@ -914,6 +914,8 @@ static int _si5351_clkout_set_phase_offset(
 static void _si5351_clkout_reset_pll(struct si5351_driver_data *drvdata, int num)
 {
 	u8 val = si5351_reg_read(drvdata, SI5351_CLK0_CTRL + num);
+	u8 rst = (val & SI5351_CLK_PLL_SELECT) ?
+			SI5351_PLL_RESET_B : SI5351_PLL_RESET_A;
 
 	switch (val & SI5351_CLK_INPUT_MASK) {
 	case SI5351_CLK_INPUT_XTAL:
@@ -921,9 +923,11 @@ static void _si5351_clkout_reset_pll(struct si5351_driver_data *drvdata, int num
 		return;  /* pll not used, no need to reset */
 	}
 
-	si5351_reg_write(drvdata, SI5351_PLL_RESET,
-			 val & SI5351_CLK_PLL_SELECT ? SI5351_PLL_RESET_B :
-						       SI5351_PLL_RESET_A);
+	si5351_reg_write(drvdata, SI5351_PLL_RESET, rst);
+
+	/* poll reset flag */
+	while (si5351_reg_read(drvdata, SI5351_PLL_RESET) & rst)
+		cpu_relax();
 
 	dev_dbg(&drvdata->client->dev, "%s - %s: pll = %d\n",
 		__func__, clk_hw_get_name(&drvdata->clkout[num].hw),
