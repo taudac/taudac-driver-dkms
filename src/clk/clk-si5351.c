@@ -903,6 +903,14 @@ static int _si5351_clkout_set_disable_state(
 	return 0;
 }
 
+static int _si5351_clkout_set_phase_offset(
+	struct si5351_driver_data *drvdata, int num, u8 delay)
+{
+	si5351_reg_write(drvdata, SI5351_CLK0_PHASE_OFFSET + num, delay);
+
+	return 0;
+}
+
 static void _si5351_clkout_reset_pll(struct si5351_driver_data *drvdata, int num)
 {
 	u8 val = si5351_reg_read(drvdata, SI5351_CLK0_CTRL + num);
@@ -933,9 +941,14 @@ static int si5351_clkout_prepare(struct clk_hw *hw)
 			SI5351_CLK_POWERDOWN, 0);
 
 	/*
-	 * Do a pll soft reset on the parent pll -- needed to get a
-	 * deterministic phase relationship between the output clocks.
+	 * In order to get a deterministic phase relationship between the output
+	 * clocks, it is required to set the phase offset each time the clock is
+	 * prepared and, subsequently, to reset its PLL.
 	 */
+	if (pdata->clkout[hwdata->num].delay >= 0)
+		_si5351_clkout_set_phase_offset(hwdata->drvdata, hwdata->num,
+				(u8)pdata->clkout[hwdata->num].delay);
+
 	if (pdata->clkout[hwdata->num].pll_reset)
 		_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
 
@@ -1323,6 +1336,11 @@ static int si5351_dt_parse(struct i2c_client *client,
 
 		if (!of_property_read_u32(child, "clock-frequency", &val))
 			pdata->clkout[num].rate = val;
+
+		if (!of_property_read_u32(child, "silabs,phase-offset", &val))
+			pdata->clkout[num].delay = val;
+		else
+			pdata->clkout[num].delay = -1;
 
 		pdata->clkout[num].pll_master =
 			of_property_read_bool(child, "silabs,pll-master");
