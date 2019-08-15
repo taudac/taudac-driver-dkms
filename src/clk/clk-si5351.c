@@ -934,6 +934,7 @@ static int si5351_clkout_prepare(struct clk_hw *hw)
 		container_of(hw, struct si5351_hw_data, hw);
 	struct si5351_platform_data *pdata =
 		hwdata->drvdata->client->dev.platform_data;
+	int i;
 
 	si5351_set_bits(hwdata->drvdata, SI5351_CLK0_CTRL + hwdata->num,
 			SI5351_CLK_POWERDOWN, 0);
@@ -943,8 +944,10 @@ static int si5351_clkout_prepare(struct clk_hw *hw)
 	 * deterministic phase relationship between the output clocks.
 	 */
 	if (pdata->clkout[hwdata->num].pll_reset) {
-		_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
-
+		for (i = 0; i < 6; i++) {
+			si5351_reg_write(hwdata->drvdata, SI5351_CLK0_PHASE_OFFSET + i, 0);
+			_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
+		}
 		si5351_set_bits(hwdata->drvdata, SI5351_OUTPUT_ENABLE_CTRL,
 				((1 << hwdata->num) | 0x1F), 0);
 	}
