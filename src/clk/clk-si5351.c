@@ -941,6 +941,8 @@ static int si5351_clkout_prepare(struct clk_hw *hw)
 	struct si5351_platform_data *pdata =
 		hwdata->drvdata->client->dev.platform_data;
 
+	int i;
+
 	si5351_set_bits(hwdata->drvdata, SI5351_CLK0_CTRL + hwdata->num,
 			SI5351_CLK_POWERDOWN, 0);
 
@@ -949,15 +951,21 @@ static int si5351_clkout_prepare(struct clk_hw *hw)
 	 * clocks, it is required to set the phase offset each time the clock is
 	 * prepared and, subsequently, to reset its PLL.
 	 */
-	if (pdata->clkout[hwdata->num].delay >= 0)
-		_si5351_clkout_set_phase_offset(hwdata->drvdata, hwdata->num,
-				(u8)pdata->clkout[hwdata->num].delay);
 
-	if (pdata->clkout[hwdata->num].pll_reset)
-		_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
+	if (hwdata->num == 5) {
+		for (i = 0; i < 6; i++) {
+			if (pdata->clkout[hwdata->num].delay >= 0)
+				_si5351_clkout_set_phase_offset(hwdata->drvdata, i,
+						(u8)pdata->clkout[i].delay);
 
-	si5351_set_bits(hwdata->drvdata, SI5351_OUTPUT_ENABLE_CTRL,
-			(1 << hwdata->num), 0);
+			if (pdata->clkout[hwdata->num].pll_reset)
+				_si5351_clkout_reset_pll(hwdata->drvdata, i);
+		}
+
+		si5351_set_bits(hwdata->drvdata, SI5351_OUTPUT_ENABLE_CTRL,
+				0x3f, 0);
+	}
+
 	return 0;
 }
 
