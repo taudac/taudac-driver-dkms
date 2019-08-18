@@ -926,25 +926,65 @@ static void _si5351_clkout_reset_pll(struct si5351_driver_data *drvdata, int num
 		(val & SI5351_CLK_PLL_SELECT) ? 1 : 0);
 }
 
+static int _si5351_clkout_set_delay(struct si5351_driver_data *drvdata,
+	int num, int delay)
+{
+	si5351_reg_write(drvdata, SI5351_CLK0_PHASE_OFFSET + num, delay);
+
+	/*
+	 * In order to get a deterministic phase relationship between the output
+	 * clocks, it is required to set the phase offset each time the clock is
+	 * prepared and, subsequently, to reset its PLL.
+	 */
+	_si5351_clkout_reset_pll(drvdata, num);
+
+	return 0;
+}
+
 static int si5351_clkout_prepare(struct clk_hw *hw)
 {
 	struct si5351_hw_data *hwdata =
 		container_of(hw, struct si5351_hw_data, hw);
-	struct si5351_platform_data *pdata =
-		hwdata->drvdata->client->dev.platform_data;
+	struct si5351_driver_data *drvdata = hwdata->drvdata;
+	struct si5351_platform_data *pdata = drvdata->client->dev.platform_data;
 
-	si5351_set_bits(hwdata->drvdata, SI5351_CLK0_CTRL + hwdata->num,
+	int n;
+	int num = hwdata->num;
+	u8  oeb = (1 << num);
+
+	/* powerup clkout */
+	si5351_set_bits(drvdata, SI5351_CLK0_CTRL + num,
 			SI5351_CLK_POWERDOWN, 0);
 
-	/*
-	 * Do a pll soft reset on the parent pll -- needed to get a
-	 * deterministic phase relationship between the output clocks.
-	 */
-	if (pdata->clkout[hwdata->num].pll_reset)
-		_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
+	if (pdata->clkout[num].sync_mode == SI5351_SYNC_SLAVE) {
+		/*
+		 * Do not enable the output yet, all synchronous clocks will
+		 * be enabled at once, together with the synchronization master
+		 * clock.
+		 */
+		 return 0;
+	}
 
-	si5351_set_bits(hwdata->drvdata, SI5351_OUTPUT_ENABLE_CTRL,
-			(1 << hwdata->num), 0);
+	if (pdata->clkout[num].sync_mode == SI5351_SYNC_MASTER) {
+		_si5351_clkout_set_delay(drvdata, num,
+				pdata->clkout[num].delay);
+
+		/* Configure sync slaves for synchronous start-up */
+		for (n = 0; n < drvdata->num_clkout; n++) {
+			if (pdata->clkout[n].sync_mode == SI5351_SYNC_SLAVE) {
+				/* TODO: Use clk_hw_is_prepared() */
+				if (__clk_is_enabled(drvdata->clkout[n].hw.clk)) {
+					_si5351_clkout_set_delay(drvdata, n,
+							pdata->clkout[n].delay);
+					oeb |= (1 << n);
+				}
+			}
+		}
+	}
+
+	/* enable clkout output */
+	si5351_set_bits(drvdata, SI5351_OUTPUT_ENABLE_CTRL, oeb, 0);
+
 	return 0;
 }
 
@@ -1320,6 +1360,32 @@ static int si5351_dt_parse(struct i2c_client *client,
 			default:
 				dev_err(&client->dev,
 					"invalid disable state %d for clkout %d\n",
+					val, num);
+				goto put_child;
+			}
+		}
+
+		if (!of_property_read_u32(child, "silabs,sync-mode", &val)) {
+			switch (val) {
+			case SI5351_SYNC_FREE:
+			case SI5351_SYNC_SLAVE:
+			case SI5351_SYNC_MASTER:
+				pdata->clkout[num].sync_mode = val;
+				break;
+			default:
+				dev_err(&client->dev,
+					"invalid sync mode %d for clkout %d\n",
+					val, num);
+				goto put_child;
+			}
+		}
+
+		if (!of_property_read_u32(child, "silabs,phase-offset", &val)) {
+			if (val <= 127) {
+				pdata->clkout[num].delay = val;
+			} else {
+				dev_err(&client->dev,
+					"invalid phase offset %d for clkout %d\n",
 					val, num);
 				goto put_child;
 			}
