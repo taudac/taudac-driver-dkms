@@ -936,11 +936,18 @@ static int si5351_clkout_prepare(struct clk_hw *hw)
 	 * Do a pll soft reset on the parent pll -- needed to get a
 	 * deterministic phase relationship between the output clocks.
 	 */
-	if (pdata->clkout[hwdata->num].pll_reset)
+	//if (pdata->clkout[hwdata->num].pll_reset)
+	if (hwdata->num == 5)
 		_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
 
 	si5351_set_bits(hwdata->drvdata, SI5351_OUTPUT_ENABLE_CTRL,
 			(1 << hwdata->num), 0);
+
+	/* One more pll reset -- stupid chip */
+	//if (pdata->clkout[hwdata->num].pll_reset)
+	if (hwdata->num == 5)
+		_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
+
 	return 0;
 }
 
