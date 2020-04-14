@@ -941,6 +941,16 @@ static int si5351_clkout_prepare(struct clk_hw *hw)
 
 	si5351_set_bits(hwdata->drvdata, SI5351_OUTPUT_ENABLE_CTRL,
 			(1 << hwdata->num), 0);
+
+	/*
+	 * Do one more pll reset after enabling the clocks -- this is
+	 * a workaround recommended by the Silicon Labs support team
+	 * to avoid (sporadic) random phase offsets between the output
+	 * clocks.
+	 */
+	if (pdata->clkout[hwdata->num].pll_reset)
+		_si5351_clkout_reset_pll(hwdata->drvdata, hwdata->num);
+
 	return 0;
 }
 
