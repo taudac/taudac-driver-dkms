@@ -203,17 +203,6 @@ static int taudac_i2s_clks_set_rate(struct snd_soc_card_drvdata *drvdata,
 	return 0;
 }
 
-static struct snd_soc_codec_conf taudac_codec_conf[] = {
-	{
-		.dev_name    = "wm8741.1-001a",
-		.name_prefix = "Left",
-	},
-	{
-		.dev_name    = "wm8741.1-001b",
-		.name_prefix = "Right",
-	},
-};
-
 static const struct reg_default wm8741_reg_updates[] = {
 	/**
 	 * R0..R3 - Attenuation:
@@ -560,6 +549,17 @@ static struct snd_soc_dai_link taudac_dai[] = {
 		.ops  = &taudac_ops,
 		.init = taudac_init,
 		SND_SOC_DAILINK_REG(taudac),
+	},
+};
+
+static struct snd_soc_codec_conf taudac_codec_conf[] = {
+	{
+		.dev_name    = "wm8741.1-001a",
+		.name_prefix = "Left",
+	},
+	{
+		.dev_name    = "wm8741.1-001b",
+		.name_prefix = "Right",
 	},
 };
 
