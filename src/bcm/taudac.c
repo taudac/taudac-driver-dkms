@@ -203,20 +203,6 @@ static int taudac_i2s_clks_set_rate(struct snd_soc_card_drvdata *drvdata,
 	return 0;
 }
 
-/*
- * asoc codecs
- */
-static struct snd_soc_dai_link_component taudac_codecs[] = {
-	{
-		.name     = "wm8741.1-001a",
-		.dai_name = "wm8741",
-	},
-	{
-		.name     = "wm8741.1-001b",
-		.dai_name = "wm8741",
-	},
-};
-
 static struct snd_soc_codec_conf taudac_codec_conf[] = {
 	{
 		.dev_name    = "wm8741.1-001a",
@@ -557,20 +543,23 @@ static struct snd_soc_ops taudac_ops = {
 	.shutdown  = taudac_shutdown,
 };
 
+SND_SOC_DAILINK_DEFS(taudac,
+	DAILINK_COMP_ARRAY(COMP_CPU("bcm2708-i2s.0")),
+	DAILINK_COMP_ARRAY(COMP_CODEC("wm8741.1-001a", "wm8741"),
+	                   COMP_CODEC("wm8741.1-001b", "wm8741")),
+	DAILINK_COMP_ARRAY(COMP_PLATFORM("bcm2708-i2s.0")));
+
 static struct snd_soc_dai_link taudac_dai[] = {
 	{
 		.name          = "TauDAC I2S",
 		.stream_name   = "TauDAC HiFi",
-		.cpu_dai_name  = "bcm2835-i2s.0",
-		.platform_name = "bcm2835-i2s.0",
-		.codecs        = taudac_codecs,
-		.num_codecs    = ARRAY_SIZE(taudac_codecs),
 		.dai_fmt       = SND_SOC_DAIFMT_I2S |
 				 SND_SOC_DAIFMT_NB_NF |
 				 SND_SOC_DAIFMT_CBS_CFS,
 		.playback_only = true,
 		.ops  = &taudac_ops,
 		.init = taudac_init,
+		SND_SOC_DAILINK_REG(taudac),
 	},
 };
 
@@ -595,7 +584,7 @@ static int taudac_set_dai(struct device_node *np)
 	int i;
 
 	struct device_node *i2s_node;
-	struct device_node *i2c_nodes[ARRAY_SIZE(taudac_codecs)];
+	struct device_node *i2c_nodes[ARRAY_SIZE(taudac_codec_conf)];
 	struct snd_soc_dai_link *dai = &taudac_dai[0];
 
 	/* dais */
@@ -604,10 +593,10 @@ static int taudac_set_dai(struct device_node *np)
 	if (i2s_node == NULL)
 		return -EINVAL;
 
-	dai->cpu_dai_name = NULL;
-	dai->cpu_of_node = i2s_node;
-	dai->platform_name = NULL;
-	dai->platform_of_node = i2s_node;
+	dai->cpus->dai_name = NULL;
+	dai->cpus->of_node = i2s_node;
+	dai->platforms->name = NULL;
+	dai->platforms->of_node = i2s_node;
 
 	for (i = 0; i < ARRAY_SIZE(i2c_nodes); i++) {
 		i2c_nodes[i] = of_parse_phandle(np, "taudac,codecs", i);
