@@ -324,7 +324,7 @@ static int codec_get_enum(struct snd_kcontrol *kcontrol,
 	int i;
 
 	for (i = 0; i < num_codecs; i++) {
-		snd_soc_component_read(codec_dais[i]->component, e->reg, &reg_val[i]);
+		reg_val[i] = snd_soc_component_read(codec_dai->component, e->reg);
 		val[i] = (reg_val[i] >> e->shift_l) & e->mask;
 		dev_dbg(codec_dais[i]->component->dev,
 			"%s: reg = %u, reg_val = 0x%04x, val = 0x%04x",
