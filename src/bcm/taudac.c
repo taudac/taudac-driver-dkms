@@ -229,13 +229,12 @@ static const struct reg_default wm8741_reg_updates[] = {
 static int taudac_codecs_init(struct snd_soc_pcm_runtime *rtd)
 {
 	int ret, i, k;
-	int num_codecs = rtd->num_codecs;
-	struct snd_soc_dai **codec_dais = rtd->codec_dais;
+	struct snd_soc_dai *codec_dai;
 
-	for (i = 0; i < num_codecs; i++) {
+	for_each_rtd_codec_dais(rtd, i, codec_dai) {
 		/* change some codec settings */
 		for (k = 0; k < ARRAY_SIZE(wm8741_reg_updates); k++) {
-			ret = snd_soc_component_write(codec_dais[i]->component,
+			ret = snd_soc_component_write(codec_dai->component,
 					wm8741_reg_updates[k].reg,
 					wm8741_reg_updates[k].def);
 
@@ -254,16 +253,15 @@ static int taudac_codecs_init(struct snd_soc_pcm_runtime *rtd)
 static void taudac_codecs_shutdown(struct snd_soc_pcm_runtime *rtd)
 {
 	int i;
-	int num_codecs = rtd->num_codecs;
-	struct snd_soc_dai **codec_dais = rtd->codec_dais;
+	struct snd_soc_dai *codec_dai;
 
-	for (i = 0; i < num_codecs; i++) {
+	for_each_rtd_codec_dais(rtd, i, codec_dai) {
 		/* disable codecs - avoid audible glitches */
-		snd_soc_component_update_bits(codec_dais[i]->component,
+		snd_soc_component_update_bits(codec_dai->component,
 				WM8741_FORMAT_CONTROL, WM8741_PWDN_MASK,
 				WM8741_PWDN);
 		/* clear codec sysclk - restore rate constrants */
-		snd_soc_dai_set_sysclk(codec_dais[i], WM8741_SYSCLK, 0,
+		snd_soc_dai_set_sysclk(codec_dai, WM8741_SYSCLK, 0,
 				SND_SOC_CLOCK_IN);
 	}
 }
@@ -272,18 +270,17 @@ static int taudac_codecs_prepare(struct snd_soc_pcm_runtime *rtd,
 		unsigned int mclk_rate, unsigned int fmt)
 {
 	int ret, i;
-	struct snd_soc_dai **codec_dais = rtd->codec_dais;
-	int num_codecs = rtd->num_codecs;
+	struct snd_soc_dai *codec_dai;
 
-	for (i = 0; i < num_codecs; i++) {
+	for_each_rtd_codec_dais(rtd, i, codec_dai) {
 		/* set codec sysclk */
-		ret = snd_soc_dai_set_sysclk(codec_dais[i],
+		ret = snd_soc_dai_set_sysclk(codec_dai,
 				WM8741_SYSCLK, mclk_rate, SND_SOC_CLOCK_IN);
 		if (ret < 0)
 			return ret;
 
 		/* set codec DAI configuration */
-		ret = snd_soc_dai_set_fmt(codec_dais[i], fmt);
+		ret = snd_soc_dai_set_fmt(codec_dai, fmt);
 		if (ret < 0)
 			return ret;
 	}
@@ -294,11 +291,10 @@ static int taudac_codecs_prepare(struct snd_soc_pcm_runtime *rtd,
 static int taudac_codecs_startup(struct snd_soc_pcm_runtime *rtd)
 {
 	int ret, i;
-	struct snd_soc_dai **codec_dais = rtd->codec_dais;
-	int num_codecs = rtd->num_codecs;
+	struct snd_soc_dai *codec_dai;
 
-	for (i = 0; i < num_codecs; i++) {
-		ret = snd_soc_component_update_bits(codec_dais[i]->component,
+	for_each_rtd_codec_dais(rtd, i, codec_dai) {
+		ret = snd_soc_component_update_bits(codec_dai->component,
 				WM8741_FORMAT_CONTROL, WM8741_PWDN_MASK, 0);
 		if (ret < 0)
 			return ret;
@@ -316,17 +312,16 @@ static int codec_get_enum(struct snd_kcontrol *kcontrol,
 	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
 	struct snd_soc_pcm_runtime *rtd = list_first_entry(
 			&card->rtd_list, struct snd_soc_pcm_runtime, list);
-	struct snd_soc_dai **codec_dais = rtd->codec_dais;
-	int num_codecs = rtd->num_codecs;
+	struct snd_soc_dai *codec_dai;
 
 	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
 	unsigned int reg_val[2], val[2], item;
 	int i;
 
-	for (i = 0; i < num_codecs; i++) {
+	for_each_rtd_codec_dais(rtd, i, codec_dai) {
 		reg_val[i] = snd_soc_component_read(codec_dai->component, e->reg);
 		val[i] = (reg_val[i] >> e->shift_l) & e->mask;
-		dev_dbg(codec_dais[i]->component->dev,
+		dev_dbg(codec_dai->component->dev,
 			"%s: reg = %u, reg_val = 0x%04x, val = 0x%04x",
 			__func__, e->reg, reg_val[i], val[i]);
 	}
@@ -347,8 +342,7 @@ static int codec_put_enum(struct snd_kcontrol *kcontrol,
 	struct snd_soc_card *card = snd_kcontrol_chip(kcontrol);
 	struct snd_soc_pcm_runtime *rtd = list_first_entry(
 			&card->rtd_list, struct snd_soc_pcm_runtime, list);
-	struct snd_soc_dai **codec_dais = rtd->codec_dais;
-	int num_codecs = rtd->num_codecs;
+	struct snd_soc_dai *codec_dai;
 
 	struct soc_enum *e = (struct soc_enum *)kcontrol->private_value;
 	unsigned int *item = ucontrol->value.enumerated.item;
@@ -362,11 +356,11 @@ static int codec_put_enum(struct snd_kcontrol *kcontrol,
 	val = snd_soc_enum_item_to_val(e, item[0]) << e->shift_l;
 	mask = e->mask << e->shift_l;
 
-	for (i = 0; i < num_codecs; i++) {
-		dev_dbg(codec_dais[i]->component->dev,
+	for_each_rtd_codec_dais(rtd, i, codec_dai) {
+		dev_dbg(codec_dai->component->dev,
 			"%s: reg = %u, mask = 0x%04x, val = 0x%04x",
 			__func__, e->reg, mask, val);
-		ret = snd_soc_component_update_bits(codec_dais[i]->component, e->reg, mask,
+		ret = snd_soc_component_update_bits(codec_dai->component, e->reg, mask,
 				val);
 		if (ret < 0)
 			return ret;
@@ -442,7 +436,7 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_card_drvdata *drvdata =
 			snd_soc_card_get_drvdata(rtd->card);
-	struct snd_soc_dai *cpu_dai = rtd->cpu_dai;
+	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
 
 	unsigned int mclk_rate, bclk_rate;
 	unsigned int lrclk_rate = params_rate(params);
