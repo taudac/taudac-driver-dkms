@@ -555,11 +555,11 @@ static struct snd_soc_dai_link taudac_dai[] = {
 
 static struct snd_soc_codec_conf taudac_codec_conf[] = {
 	{
-		.dev_name    = "wm8741.1-001a",
+		.dlc = COMP_CODEC_CONF("wm8741.1-001a"),
 		.name_prefix = "Left",
 	},
 	{
-		.dev_name    = "wm8741.1-001b",
+		.dlc = COMP_CODEC_CONF("wm8741.1-001b"),
 		.name_prefix = "Right",
 	},
 };
