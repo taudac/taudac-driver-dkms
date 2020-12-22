@@ -458,6 +458,7 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 		break;
 	case 24:
 		width = 32;
+		fallthrough;
 	case 32:
 		fmt |= SND_SOC_DAIFMT_NB_NF;
 		break;
