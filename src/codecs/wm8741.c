@@ -62,8 +62,8 @@ static unsigned int _wm8741_volume_get(struct snd_soc_component *component,
 	unsigned int mask = mc->max;
 	unsigned int val, msb_val, lsb_val;
 
-	snd_soc_component_read(component, msb_reg, &msb_val);
-	snd_soc_component_read(component, lsb_reg, &lsb_val);
+	msb_val = snd_soc_component_read(component, msb_reg);
+	lsb_val = snd_soc_component_read(component, lsb_reg);
 
 	val = ((msb_val << mc->shift) | lsb_val) & mask;
 
