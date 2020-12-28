@@ -563,6 +563,7 @@ static struct snd_soc_codec_conf taudac_codec_conf[] = {
  */
 static struct snd_soc_card taudac_card = {
 	.name         = "TauDAC",
+	.owner        = THIS_MODULE,
 	.dai_link     = taudac_dai,
 	.num_links    = ARRAY_SIZE(taudac_dai),
 	.codec_conf   = taudac_codec_conf,
