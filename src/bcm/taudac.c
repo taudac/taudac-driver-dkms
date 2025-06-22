@@ -695,11 +695,9 @@ static int taudac_probe(struct platform_device *pdev)
 	return ret;
 }
 
-static int taudac_remove(struct platform_device *pdev)
+static void taudac_remove(struct platform_device *pdev)
 {
 	snd_soc_unregister_card(&taudac_card);
-
-	return 0;
 }
 
 static const struct of_device_id taudac_of_match[] = {
