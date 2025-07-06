@@ -442,9 +442,7 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	unsigned int lrclk_rate = params_rate(params);
 	int width = params_width(params);
 
-	unsigned int fmt = SND_SOC_DAIFMT_I2S;
-	unsigned int cpu_fmt;
-	unsigned int codec_fmt;
+	unsigned int fmt = SND_SOC_DAIFMT_I2S | SND_SOC_DAIFMT_BC_FC;
 
 	switch (width) {
 	case 16:
@@ -460,9 +458,6 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 		dev_err(rtd->card->dev, "Bit depth not supported: %d", width);
 		return -EINVAL;
 	}
-
-	cpu_fmt   = fmt | SND_SOC_DAIFMT_CBM_CFM;
-	codec_fmt = fmt | SND_SOC_DAIFMT_CBS_CFS;
 
 	switch (lrclk_rate) {
 	case 44100:
@@ -489,12 +484,12 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	if (ret < 0)
 		return ret;
 
-	ret = snd_soc_dai_set_fmt(cpu_dai, cpu_fmt);
+	ret = snd_soc_dai_set_fmt(cpu_dai, fmt);
 	if (ret < 0)
 		return ret;
 
 	/* prepare codecs */
-	ret = taudac_codecs_prepare(rtd, mclk_rate, codec_fmt);
+	ret = taudac_codecs_prepare(rtd, mclk_rate, fmt);
 	if (ret < 0)
 		return ret;
 
