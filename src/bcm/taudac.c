@@ -436,7 +436,7 @@ static int taudac_hw_params(struct snd_pcm_substream *substream,
 	struct snd_soc_pcm_runtime *rtd = substream->private_data;
 	struct snd_soc_card_drvdata *drvdata =
 			snd_soc_card_get_drvdata(rtd->card);
-	struct snd_soc_dai *cpu_dai = asoc_rtd_to_cpu(rtd, 0);
+	struct snd_soc_dai *cpu_dai = snd_soc_rtd_to_cpu(rtd, 0);
 
 	unsigned int mclk_rate, bclk_rate;
 	unsigned int lrclk_rate = params_rate(params);
@@ -695,11 +695,9 @@ static int taudac_probe(struct platform_device *pdev)
 	return ret;
 }
 
-static int taudac_remove(struct platform_device *pdev)
+static void taudac_remove(struct platform_device *pdev)
 {
 	snd_soc_unregister_card(&taudac_card);
-
-	return 0;
 }
 
 static const struct of_device_id taudac_of_match[] = {
