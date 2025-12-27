@@ -1,0 +1,94 @@
+name: Build and Release Debian Package
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build-deb:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y debhelper dkms build-essential devscripts
+
+      - name: Extract version from tag
+        id: get_version
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            VERSION=${GITHUB_REF#refs/tags/v}
+          else
+            VERSION=$(grep PACKAGE_VERSION dkms.conf | cut -d'"' -f2)
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Build Debian package
+        run: |
+          dpkg-buildpackage -us -uc -b
+
+      - name: List built packages
+        run: |
+          ls -lh ../*.deb
+
+      - name: Move packages to workspace
+        run: |
+          mkdir -p build-output
+          mv ../*.deb build-output/
+          mv ../*.buildinfo build-output/ || true
+          mv ../*.changes build-output/ || true
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: debian-packages
+          path: build-output/*.deb
+          retention-days: 90
+
+      - name: Create Release
+        if: github.ref_type == 'tag'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: build-output/*.deb
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  test-install:
+    runs-on: ubuntu-latest
+    needs: build-deb
+
+    steps:
+      - name: Download package
+        uses: actions/download-artifact@v4
+        with:
+          name: debian-packages
+
+      - name: Install test dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y dkms
+
+      - name: Test package installation
+        run: |
+          sudo dpkg -i *.deb || true
+          sudo apt-get install -f -y
+          dpkg -l | grep taudac
+
+      - name: Verify DKMS registration
+        run: |
+          dkms status taudac
+
+      - name: Test package removal
+        run: |
+          sudo apt-get remove -y taudac-dkms
+          ! dkms status taudac 2>&1 | grep -q "taudac" || exit 1
