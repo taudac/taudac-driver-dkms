@@ -11,16 +11,23 @@ Installation
 
 We will build and install the driver using DKMS.
 
+Before you start, define the TauDAC version variable:
+
+    export taudacver=2.5.0
+
+You can then use `$taudacver` in the commands below. Adjust the version if
+you're installing a different release.
+
 ### Preparation
 
 Download and unzip the driver source directory:
 
-    wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-2.5.0.tar.gz
-    tar -xzf taudac-2.5.0.tar.gz
+    wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-${taudacver}.tar.gz
+    tar -xzf taudac-${taudacver}.tar.gz
 
 Copy the driver source to a directory where DKMS can find it:
 
-    sudo cp -r taudac-driver-dkms-taudac-2.5.0 /usr/src/taudac-2.5.0
+    sudo cp -r taudac-driver-dkms-taudac-${taudacver} /usr/src/taudac-${taudacver}
 
 Install the build dependencies:
 
@@ -45,13 +52,13 @@ Please be patient, _"Unpacking raspberrypi-kernel-headers"_ might take a while..
 
 Build and install the driver using DKMS:
 
-    sudo dkms install -m taudac -v 2.5.0 --force
+    sudo dkms install -m taudac -v ${taudacver} --force
 
 ### Uninstalling
 
 Uninstall the driver using DKMS:
 
-    sudo dkms remove -m taudac -v 2.5.0 --all
+    sudo dkms remove -m taudac -v ${taudacver} --all
 
 Configuration
 -------------
