@@ -9,8 +9,6 @@ Copyright (C) 2017 Sergej Sawazki
 Installation
 ------------
 
-We will build and install the driver using DKMS.
-
 Before you start, define the TauDAC version variable:
 
     export taudacver=2.5.0
@@ -18,7 +16,30 @@ Before you start, define the TauDAC version variable:
 You can then use `$taudacver` in the commands below. Adjust the version if
 you're installing a different release.
 
-### Preparation
+### Method 1: Debian Package (Recommended)
+
+The easiest way to install the TauDAC driver is using the pre-built Debian package.
+
+1. Download the latest `.deb` package from the [Releases page](https://github.com/taudac/taudac-driver-dkms/releases)
+
+2. Install the package:
+
+       sudo dpkg -i taudac-dkms_${taudacver}-1_all.deb
+
+3. Verify installation:
+
+       dkms status taudac
+
+#### Uninstalling
+
+    sudo apt-get remove taudac-dkms
+
+### Method 2: Manual Installation using DKMS
+
+If you prefer to install manually or the `.deb` package is not available for
+your system, you can build and install the driver manually using DKMS.
+
+#### Preparation
 
 Download and unzip the driver source directory:
 
@@ -33,7 +54,7 @@ Install the build dependencies:
 
     sudo apt-get install dkms build-essential
 
-### Installing the Kernel Headers
+#### Installing the Kernel Headers
 
 To build the driver, we need to install the kernel headers. The method depends
 on your distribution.
@@ -48,13 +69,13 @@ Please be patient, _"Unpacking raspberrypi-kernel-headers"_ might take a while..
 
     sudo volumio kernelsource
 
-### Building and Installing
+#### Building and Installing
 
 Build and install the driver using DKMS:
 
     sudo dkms install -m taudac -v ${taudacver} --force
 
-### Uninstalling
+#### Uninstalling
 
 Uninstall the driver using DKMS:
 

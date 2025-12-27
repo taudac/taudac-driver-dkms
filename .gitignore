@@ -8,3 +8,22 @@
 *.order
 **/.tmp_versions/
 *.patch
+
+# Debian package build artifacts
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/*.substvars
+debian/*.log
+debian/taudac-dkms/
+debian/tmp/
+
+# Build output in parent directory
+../*.deb
+../*.dsc
+../*.changes
+../*.buildinfo
+../*.tar.xz
+
+# Local build artifacts directory
+dist/
