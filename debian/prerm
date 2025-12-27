@@ -1,0 +1,33 @@
+#!/bin/sh
+# prerm script for taudac-dkms
+
+set -e
+
+PACKAGE_NAME=taudac
+PACKAGE_VERSION=2.5.0
+
+case "$1" in
+    remove|upgrade|deconfigure)
+        if [ -e /usr/src/${PACKAGE_NAME}-${PACKAGE_VERSION}/dkms.conf ]; then
+            echo "Removing ${PACKAGE_NAME}/${PACKAGE_VERSION} from DKMS..."
+            if [ -f /usr/lib/dkms/common.prerm ]; then
+                /usr/lib/dkms/common.prerm ${PACKAGE_NAME} ${PACKAGE_VERSION} /usr/share/${PACKAGE_NAME}-dkms
+            else
+                # Fallback if common.prerm not available
+                dkms remove -m ${PACKAGE_NAME} -v ${PACKAGE_VERSION} --all || true
+            fi
+        fi
+        ;;
+
+    failed-upgrade)
+        ;;
+
+    *)
+        echo "prerm called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

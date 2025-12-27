@@ -1,0 +1,47 @@
+#!/bin/sh
+# postinst script for taudac-dkms
+
+set -e
+
+PACKAGE_NAME=taudac
+PACKAGE_VERSION=2.5.0
+
+case "$1" in
+    configure)
+        # Add the module to DKMS if not already present
+        if [ -e /usr/src/${PACKAGE_NAME}-${PACKAGE_VERSION}/dkms.conf ]; then
+            echo "Adding ${PACKAGE_NAME}/${PACKAGE_VERSION} to DKMS..."
+            dkms add -m ${PACKAGE_NAME} -v ${PACKAGE_VERSION} --rpm_safe_upgrade || true
+
+            # Check for exact kernel headers before building
+            CURK="$(uname -r)"
+            HEADER_DIR="/usr/src/linux-headers-${CURK}"
+            BUILD_LINK="/lib/modules/${CURK}/build"
+
+            if [ -e "${BUILD_LINK}" ] || [ -d "${HEADER_DIR}" ]; then
+                echo "Building and installing ${PACKAGE_NAME} module for kernel ${CURK}..."
+                # Prefer targeted build/install for the running kernel
+                dkms build -m ${PACKAGE_NAME} -v ${PACKAGE_VERSION} -k "${CURK}" || true
+                dkms install -m ${PACKAGE_NAME} -v ${PACKAGE_VERSION} -k "${CURK}" || true
+            else
+                echo "Kernel headers for ${CURK} are missing."
+                echo "Please install them and then build the module manually:"
+                echo "  sudo apt-get install linux-headers-$(uname -r)"
+                echo "  sudo dkms install -m ${PACKAGE_NAME} -v ${PACKAGE_VERSION} -k ${CURK}"
+                echo "Skipping DKMS build/install for now; source has been registered with DKMS."
+            fi
+        fi
+        ;;
+
+    abort-upgrade|abort-remove|abort-deconfigure)
+        ;;
+
+    *)
+        echo "postinst called with unknown argument \`$1'" >&2
+        exit 1
+        ;;
+esac
+
+#DEBHELPER#
+
+exit 0

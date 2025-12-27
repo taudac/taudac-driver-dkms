@@ -1,0 +1,24 @@
+#!/usr/bin/make -f
+
+# Debian package rules for taudac-dkms
+# See debhelper(7)
+
+#export DH_VERBOSE = 1
+
+PACKAGE_NAME := taudac-dkms
+PACKAGE_VERSION := 2.5.0
+
+%:
+	dh $@ --with dkms
+
+override_dh_install:
+	dh_install
+
+override_dh_dkms:
+	dh_dkms -V $(PACKAGE_VERSION)
+
+override_dh_auto_configure:
+override_dh_auto_build:
+override_dh_auto_test:
+override_dh_auto_install:
+override_dh_auto_clean:

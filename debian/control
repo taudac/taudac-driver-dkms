@@ -1,0 +1,26 @@
+Source: taudac-dkms
+Section: kernel
+Priority: optional
+Maintainer: Sergej Sawazki <taudac@gmx.de>
+Build-Depends: debhelper-compat (= 13), dkms
+Standards-Version: 4.6.2
+Homepage: http://www.taudac.com
+Vcs-Browser: https://github.com/taudac/taudac-driver-dkms
+Vcs-Git: https://github.com/taudac/taudac-driver-dkms.git
+Rules-Requires-Root: no
+
+Package: taudac-dkms
+Architecture: all
+Depends: ${misc:Depends}, dkms (>= 2.1.0.0)
+Recommends: linux-headers-generic | linux-headers | raspberrypi-kernel-headers
+Description: DKMS source for TauDAC ASoC driver
+ This package provides the TauDAC driver in a form suitable for use with DKMS.
+ .
+ The TauDAC driver provides ALSA System on Chip (ASoC) support for the TauDAC,
+ a high-quality audio DAC for Raspberry Pi. It includes:
+  * snd-soc-taudac: Main TauDAC machine driver
+  * snd-soc-wm8741: WM8741 codec driver
+  * clk-si5351: Si5351 clock generator driver
+ .
+ The kernel module will be automatically built for the currently running kernel
+ and automatically rebuilt for any new kernel installations.
