@@ -66,7 +66,7 @@ Configuration
 ### Disabling the Raspberry Pi audio driver
 
 The Raspberry Pi audio driver (`snd_bcm2835`) can be disabled by _commenting
-out_ the following entry in `/boot/contig.txt`:
+out_ the following entry in `/boot/config.txt`:
 
     dtparam=audio=on
 
