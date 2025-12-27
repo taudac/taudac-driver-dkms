@@ -13,12 +13,12 @@ We will build and install the driver using DKMS.
 
 ### Preparation
 
-If not already done, download and unzip the driver source directory:
+Download and unzip the driver source directory:
 
     wget https://github.com/taudac/taudac-driver-dkms/archive/taudac-2.5.0.tar.gz
     tar -xzf taudac-2.5.0.tar.gz
 
-Now copy the driver source to a directory where DKMS can find it:
+Copy the driver source to a directory where DKMS can find it:
 
     sudo cp -r taudac-driver-dkms-taudac-2.5.0 /usr/src/taudac-2.5.0
 
@@ -28,29 +28,28 @@ Install the build dependencies:
 
 ### Installing the Kernel Headers
 
-To build the driver, we will need to install the kernel headers. The way to do
-it depends on the distribution you are using.
+To build the driver, we need to install the kernel headers. The method depends
+on your distribution.
 
-The **Raspbian** way:
+**Raspbian / Raspberry Pi OS:**
 
     sudo apt-get install linux-headers-$(uname -r)
 
-Please be patient, _"Unpacking raspberrypi-kernel-headers"_ might take an
-hour or so...
+Please be patient, _"Unpacking raspberrypi-kernel-headers"_ might take a while...
 
-The **Volumio** way:
+**Volumio:**
 
     sudo volumio kernelsource
 
-### Installing the driver
+### Building and Installing
 
-To build and install the driver using DKMS do:
+Build and install the driver using DKMS:
 
     sudo dkms install -m taudac -v 2.5.0 --force
 
-### Uninstalling the driver
+### Uninstalling
 
-The driver can be uninstalled using DKMS with:
+Uninstall the driver using DKMS:
 
     sudo dkms remove -m taudac -v 2.5.0 --all
 
