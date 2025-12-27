@@ -33,7 +33,7 @@ it depends on the distribution you are using.
 
 The **Raspbian** way:
 
-    sudo apt-get install raspberrypi-kernel-headers
+    sudo apt-get install linux-headers-$(uname -r)
 
 Please be patient, _"Unpacking raspberrypi-kernel-headers"_ might take an
 hour or so...
