@@ -13,7 +13,7 @@ We will build and install the driver using DKMS.
 
 Before you start, define the TauDAC version variable:
 
-    export taudacver=2.5.0
+    export taudacver=2.5.1
 
 You can then use `$taudacver` in the commands below. Adjust the version if
 you're installing a different release.
