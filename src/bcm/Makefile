@@ -19,10 +19,12 @@ endif
 all:
 	$(MAKE) -C $(KERNELDIR)/build M=$(PWD) modules
 
-install: all
+modules_install: all
 	$(MAKE) INSTALL_MOD_DIR=$(INSTALLDIR) \
 		-C $(KERNELDIR)/build M=$(PWD) modules_install
-		@depmod -a $(kernelver)
+
+install: modules_install
+	@depmod -a $(kernelver)
 
 release: all
 	@install -m 644 -vD -t $(RELEASEDIR)/$(INSTALLDIR) $(MODULENAME)

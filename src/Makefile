@@ -12,6 +12,7 @@ DIRS = bcm codecs clk
 BUILDDIRS = $(DIRS:%=build-%)
 CLEANDIRS = $(DIRS:%=clean-%)
 INSTALLDIRS = $(DIRS:%=install-%)
+MODULESINSTALLDIRS = $(DIRS:%=modules_install-%)
 UNINSTALLDIRS = $(DIRS:%=uninstall-%)
 RELEASEDIRS = $(DIRS:%=release-%)
 
@@ -37,6 +38,8 @@ $(DIRS): $(BUILDDIRS)
 all: $(BUILDDIRS)
 
 install: $(INSTALLDIRS)
+
+modules_install: $(MODULESINSTALLDIRS)
 
 uninstall: $(UNINSTALLDIRS)
 
@@ -71,6 +74,9 @@ $(BUILDDIRS):
 
 $(INSTALLDIRS):
 	$(MAKE) -C $(@:install-%=%) install
+
+$(MODULESINSTALLDIRS):
+	$(MAKE) -C $(@:modules_install-%=%) modules_install
 
 $(UNINSTALLDIRS):
 	$(MAKE) -C $(@:uninstall-%=%) uninstall
