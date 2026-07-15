@@ -1,0 +1,35 @@
+# Contributor: Sergej Sawazki <sergej@taudac.com>
+# Maintainer: Sergej Sawazki <sergej@taudac.com>
+
+pkgname=taudac-modules-rpi
+
+# Env: TARGET_KERNEL (required), e.g. TARGET_KERNEL=6.18.35-r0 abuild -r
+_kernel="${TARGET_KERNEL:?set TARGET_KERNEL to the exact linux-rpi version, e.g. TARGET_KERNEL=6.18.35-r0}"
+
+pkgver="${_kernel%-r*}"
+pkgrel=0
+pkgdesc="TauDAC ASoC driver for the Alpine linux-rpi kernel"
+url="https://github.com/taudac/taudac-driver-dkms"
+arch="aarch64"
+license="GPL-2.0-only AND GPL-2.0-or-later"
+makedepends="linux-rpi-dev=$_kernel"
+install_if="linux-rpi=$_kernel"
+install="$pkgname.pre-install $pkgname.pre-upgrade $pkgname.post-install $pkgname.post-upgrade"
+triggers="$pkgname.trigger=/lib/modules/*"
+options="!check !usrmerge" # no test suite; !usrmerge for /lib/modules (kernel modules can't move to /usr/lib)
+
+# No prepare(): makedepends="linux-rpi-dev=$_kernel" already gives us a
+# fully-prepared kernel tree via apk. Works because build() runs in a
+# genuinely aarch64 container, so linux-rpi-dev's prebuilt scripts/ run fine.
+
+build() {
+	_kver=$(cat /usr/src/linux-headers-*/include/config/kernel.release)
+	make --no-print-directory -C "$startdir/../../../../src" kernelver="$_kver" all
+}
+
+package() {
+	_kver=$(cat /usr/src/linux-headers-*/include/config/kernel.release)
+
+	make --no-print-directory -C "$startdir/../../../../src" kernelver="$_kver" \
+		INSTALL_MOD_PATH="$pkgdir" modules_install
+}

@@ -1,0 +1,26 @@
+#!/bin/sh
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Refuses to install unless /lib/modules is already a writable overlay --
+# otherwise modules installed here are silently lost on reboot.
+
+if ! mount | grep -q ' on /lib/modules type overlay '; then
+	cat >&2 <<-EOF
+	ERROR: TauDAC modules require /lib/modules to be a writable overlay so
+	       kernel modules survive a reboot on this diskless Alpine system.
+	       Right now it isn't -- modules installed here would be silently
+	       discarded on the next reboot.
+
+	       Add "overlay" to the modules= list and set overlay_size=<N>M
+	       (e.g. overlay_size=16M) in /boot/cmdline.txt, e.g.:
+
+	           modules=loop,squashfs,sd-mod,usb-storage,overlay overlay_size=16M
+
+	       Then reboot, confirm with 'mount | grep /lib/modules' that it
+	       shows "type overlay", and retry installing the TauDAC modules.
+	EOF
+	exit 1
+fi
+
+exit 0

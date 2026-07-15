@@ -1,0 +1,16 @@
+#!/bin/sh
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# pre-install/pre-upgrade already hard-fail unless /lib/modules is a
+# writable overlay, so cmdline.txt is already set up correctly by the
+# time this runs -- nothing left to do here but remind about lbu commit.
+
+cat <<-EOF
+
+	TauDAC modules installed. To make this persist across reboots, run:
+
+	    lbu commit
+	    reboot
+
+EOF

@@ -1,0 +1,18 @@
+#!/bin/sh
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# Upgrading needs the same post-install reminder as a fresh install.
+#
+# Inlined rather than exec'd from post-install: apk-tools v3 runs hook
+# scripts from an anonymous fd, not a real file path, so there's no
+# reliable way to locate a sibling script to exec.
+
+cat <<-EOF
+
+	TauDAC modules installed. To make this persist across reboots, run:
+
+	    lbu commit
+	    reboot
+
+EOF

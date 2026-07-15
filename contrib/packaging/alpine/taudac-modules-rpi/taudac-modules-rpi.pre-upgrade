@@ -1,0 +1,33 @@
+#!/bin/sh
+#
+# SPDX-License-Identifier: GPL-2.0-or-later
+#
+# apk's upgrade path runs pre-upgrade/post-upgrade instead of
+# pre-install/post-install -- without this, the hard writable-overlay check
+# in pre-install would only ever run on the very first install, and
+# `apk upgrade` could silently reach the exact module-loss scenario that
+# check exists to prevent.
+#
+# Inlined rather than exec'd from pre-install: apk-tools v3 runs hook
+# scripts from an anonymous fd, not a real file path, so there's no
+# reliable way to locate a sibling script to exec.
+
+if ! mount | grep -q ' on /lib/modules type overlay '; then
+	cat >&2 <<-EOF
+	ERROR: TauDAC modules require /lib/modules to be a writable overlay so
+	       kernel modules survive a reboot on this diskless Alpine system.
+	       Right now it isn't -- modules installed here would be silently
+	       discarded on the next reboot.
+
+	       Add "overlay" to the modules= list and set overlay_size=<N>M
+	       (e.g. overlay_size=16M) in /boot/cmdline.txt, e.g.:
+
+	           modules=loop,squashfs,sd-mod,usb-storage,overlay overlay_size=16M
+
+	       Then reboot, confirm with 'mount | grep /lib/modules' that it
+	       shows "type overlay", and retry installing the TauDAC modules.
+	EOF
+	exit 1
+fi
+
+exit 0
