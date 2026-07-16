@@ -3,7 +3,7 @@ PWD := $(shell pwd)
 ifeq ($(INSTALL_TO_ORIGDIR), 1)
     INSTALLDIR = kernel/sound/soc/codecs
 else
-    INSTALLDIR = taudac
+    INSTALLDIR = updates
 endif
 
 MODULENAME = snd-soc-wm8741.ko

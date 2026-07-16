@@ -3,7 +3,7 @@ PWD := $(shell pwd)
 ifeq ($(INSTALL_TO_ORIGDIR), 1)
     INSTALLDIR = kernel/sound/soc/bcm
 else
-    INSTALLDIR = taudac
+    INSTALLDIR = updates
 endif
 
 MODULENAME = snd-soc-taudac.ko

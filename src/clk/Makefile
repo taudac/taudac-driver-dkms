@@ -3,7 +3,7 @@ PWD := $(shell pwd)
 ifeq ($(INSTALL_TO_ORIGDIR), 1)
     INSTALLDIR = kernel/drivers/clk
 else
-    INSTALLDIR = taudac
+    INSTALLDIR = updates
 endif
 
 MODULENAME = clk-si5351.ko
